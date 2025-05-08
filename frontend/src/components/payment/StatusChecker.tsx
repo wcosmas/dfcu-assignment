@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -29,7 +29,11 @@ const statusFormSchema = z.object({
 
 type StatusFormValues = z.infer<typeof statusFormSchema>;
 
-export function StatusChecker() {
+interface StatusCheckerProps {
+  transactionRef?: string | null;
+}
+
+export function StatusChecker({ transactionRef }: StatusCheckerProps) {
   const {
     checkPaymentStatus,
     loading,
@@ -42,13 +46,28 @@ export function StatusChecker() {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<StatusFormValues>({
     resolver: zodResolver(statusFormSchema),
     defaultValues: {
-      transactionReference: "",
+      transactionReference: transactionRef || "",
     },
   });
+
+  // Auto-check status if transactionRef is provided via URL
+  useEffect(() => {
+    if (transactionRef) {
+      setValue("transactionReference", transactionRef);
+      checkPaymentStatus(transactionRef).catch((error) => {
+        console.error("Status check error:", error);
+        const message =
+          error.response?.data?.message ||
+          "Failed to check payment status. Please try again.";
+        setGeneralError(message);
+      });
+    }
+  }, [transactionRef, checkPaymentStatus, setValue, setGeneralError]);
 
   const onSubmit = async (data: StatusFormValues) => {
     setGeneralError(null);

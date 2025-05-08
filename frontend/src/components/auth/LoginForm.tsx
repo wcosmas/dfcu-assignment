@@ -67,7 +67,7 @@ export function LoginForm() {
             alt="DFCU Bank"
             width={200}
             height={80}
-            className="h-20 w-auto"
+            className="h-10 w-auto"
             priority
             onError={() => setLogoError(true)}
           />
