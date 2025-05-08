@@ -388,7 +388,7 @@ The included `docker-compose.yml` is already configured for production, but you 
 1. Run database migrations:
 
    ```bash
-   docker-compose exec backend npx prisma migrate deploy
+   docker-compose exec backend npx prisma db push
    ```
 
 2. (Optional) Seed the database with initial data:
