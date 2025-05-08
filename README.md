@@ -191,8 +191,8 @@ NEXT_PUBLIC_API_URL=http://localhost:8000/api
 cd backend
 
 # Set up the database
-npm run prisma:migrate
-npm run prisma:generate
+npx prisma generate
+npx prisma db push
 
 # Optional: Generate seed data
 npm run seed
