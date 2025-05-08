@@ -12,10 +12,12 @@ import {
   FiCheckCircle,
   FiArrowLeft,
 } from "react-icons/fi";
-import { FormInput } from "@/components/ui/FormInput";
-import { Button } from "@/components/ui/Button";
+
 import { usePaymentWithToast } from "@/hooks/api";
 import { PaymentRequest } from "@/types";
+
+import { FormInput } from "@/components/ui/FormInput";
+import { Button } from "@/components/ui/Button";
 import {
   Card,
   CardHeader,

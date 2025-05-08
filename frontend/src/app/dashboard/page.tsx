@@ -1,7 +1,9 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { toast } from "sonner";
 import Link from "next/link";
 import {
   FiCreditCard,
@@ -14,22 +16,22 @@ import {
   FiActivity,
   FiRefreshCw,
 } from "react-icons/fi";
+
+import { useAuth } from "@/hooks/api";
+import { useQuery } from "@tanstack/react-query";
+import { QUERY_KEYS } from "@/lib/query-keys";
+import { paymentApi } from "@/api/payment";
+
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/Button";
-import { useAuth, usePayment } from "@/hooks/api";
-import { PaymentStatus } from "@/types";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { motion } from "framer-motion";
-import { toast } from "sonner";
 
 // Define cards outside the component to avoid recreation on each render
 const actionCards = [
@@ -74,78 +76,40 @@ const itemVariants = {
 export default function DashboardPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
+
+  // Use React Query to fetch transaction data
   const {
-    transactions,
-    loading: paymentLoading,
-    refetchTransactions,
-    error: transactionError,
-  } = usePayment();
-  const [mockTransactions, setMockTransactions] = useState<PaymentStatus[]>([]);
-
-  // Initialize mock data on client-side only
-  useEffect(() => {
-    // Create timestamps based on relative time to avoid hydration mismatch
-    const now = new Date();
-    const oneHourAgo = new Date(now);
-    oneHourAgo.setHours(now.getHours() - 1);
-    const twoHoursAgo = new Date(now);
-    twoHoursAgo.setHours(now.getHours() - 2);
-
-    setMockTransactions([
-      {
-        transactionReference: "TRX-123456-ABCDEF",
-        status: "SUCCESSFUL",
-        statusCode: 200,
-        message: "Transaction successfully processed",
-        timestamp: now.toISOString(),
-      },
-      {
-        transactionReference: "TRX-234567-BCDEFG",
-        status: "PENDING",
-        statusCode: 100,
-        message: "Transaction Pending",
-        timestamp: oneHourAgo.toISOString(),
-      },
-      {
-        transactionReference: "TRX-345678-CDEFGH",
-        status: "FAILED",
-        statusCode: 400,
-        message: "Transaction failed: Insufficient funds",
-        timestamp: twoHoursAgo.toISOString(),
-      },
-    ]);
-  }, []);
+    data: transactions = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+    isRefetching,
+  } = useQuery({
+    queryKey: [QUERY_KEYS.PAYMENT.HISTORY],
+    queryFn: paymentApi.getTransactionHistory,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
 
   // Show error toast when transaction error occurs
   useEffect(() => {
-    if (transactionError) {
+    if (isError && error) {
       toast.error("Error Fetching Transactions", {
         description: "Failed to load your transactions. Please try again.",
       });
     }
-  }, [transactionError]);
-
-  useEffect(() => {
-    // Fetch transaction history on component mount
-    handleRefreshTransactions();
-  }, []);
+  }, [isError, error]);
 
   // Handle refreshing transactions with toast feedback
   const handleRefreshTransactions = async () => {
     try {
-      await refetchTransactions();
+      await refetch();
     } catch (error) {
       toast.error("Refresh Failed", {
         description: "Could not refresh transactions. Please try again.",
       });
     }
   };
-
-  // Use either real data or mock data
-  const displayTransactions =
-    transactions && transactions.length > 0
-      ? transactions.slice(0, 5)
-      : mockTransactions;
 
   // Status badge variants
   const getStatusBadgeVariant = (status: string) => {
@@ -284,7 +248,7 @@ export default function DashboardPage() {
                     </div>
                     <div>
                       <p className="text-3xl font-bold">
-                        {transactions?.length || mockTransactions.length}
+                        {transactions?.length || 0}
                       </p>
                       <p className="text-sm text-muted-foreground">
                         Since account creation
@@ -307,9 +271,8 @@ export default function DashboardPage() {
                     </div>
                     <div>
                       <p className="text-3xl font-bold">
-                        {displayTransactions.filter(
-                          (tx) => tx.status === "PENDING"
-                        ).length || 0}
+                        {transactions.filter((tx) => tx.status === "PENDING")
+                          .length || 0}
                       </p>
                       <p className="text-sm text-muted-foreground">
                         Awaiting confirmation
@@ -332,13 +295,13 @@ export default function DashboardPage() {
                     </div>
                     <div>
                       <p className="text-3xl font-bold">
-                        {displayTransactions.length === 0
+                        {transactions.length === 0
                           ? "0%"
                           : `${Math.round(
-                              (displayTransactions.filter(
+                              (transactions.filter(
                                 (tx) => tx.status === "SUCCESSFUL"
                               ).length /
-                                displayTransactions.length) *
+                                transactions.length) *
                                 100
                             )}%`}
                       </p>
@@ -367,13 +330,13 @@ export default function DashboardPage() {
                 variant="outline"
                 size="sm"
                 onClick={handleRefreshTransactions}
-                disabled={paymentLoading}
+                disabled={isLoading || isRefetching}
                 className="flex items-center gap-1"
               >
                 <FiRefreshCw
-                  className={`h-4 w-4 ${paymentLoading ? "animate-spin" : ""}`}
+                  className={`h-4 w-4 ${isRefetching ? "animate-spin" : ""}`}
                 />
-                {paymentLoading ? "Refreshing..." : "Refresh"}
+                {isRefetching ? "Refreshing..." : "Refresh"}
               </Button>
             </div>
 
@@ -406,7 +369,19 @@ export default function DashboardPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-muted">
-                    {displayTransactions.length === 0 ? (
+                    {isLoading ? (
+                      <tr>
+                        <td
+                          colSpan={5}
+                          className="px-6 py-12 text-center text-muted-foreground"
+                        >
+                          <div className="flex justify-center items-center">
+                            <FiRefreshCw className="h-5 w-5 mr-2 animate-spin text-primary" />
+                            <span>Loading transactions...</span>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : transactions.length === 0 ? (
                       <tr>
                         <td
                           colSpan={5}
@@ -416,7 +391,7 @@ export default function DashboardPage() {
                         </td>
                       </tr>
                     ) : (
-                      displayTransactions.map((transaction) => (
+                      transactions.slice(0, 5).map((transaction) => (
                         <tr
                           key={transaction.transactionReference}
                           className="bg-background hover:bg-muted/20 transition-colors"
@@ -465,8 +440,8 @@ export default function DashboardPage() {
 
               <CardFooter className="border-t flex justify-between p-4">
                 <p className="text-xs text-muted-foreground">
-                  Showing {displayTransactions.length} of{" "}
-                  {transactions?.length || mockTransactions.length} transactions
+                  Showing {Math.min(transactions.length, 5)} of{" "}
+                  {transactions?.length || 0} transactions
                 </p>
 
                 <Link

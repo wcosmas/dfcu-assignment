@@ -8,10 +8,11 @@ import {
   FiCheckCircle,
   FiClock,
 } from "react-icons/fi";
-import { FormInput } from "@/components/ui/form-input";
-import { Button } from "@/components/ui/Button";
+
 import { usePayment } from "@/hooks/usePayment";
 
+import { FormInput } from "@/components/ui/form-input";
+import { Button } from "@/components/ui/Button";
 import {
   Card,
   CardContent,

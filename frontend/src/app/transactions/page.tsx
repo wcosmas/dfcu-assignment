@@ -8,7 +8,6 @@ import {
   FiFilter,
   FiSearch,
   FiEye,
-  FiX,
   FiCheckCircle,
   FiAlertCircle,
   FiClock as FiClockCircle,
@@ -24,7 +23,6 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  CardFooter,
 } from "@/components/ui/card";
 import {
   Table,
