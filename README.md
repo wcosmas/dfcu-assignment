@@ -249,25 +249,21 @@ Access the application at:
 
 Below are screenshots showcasing the application's frontend web interface and functionality:
 
-![Login Screen](/screenshots/Screenshot%202025-05-08%20at%2019.15.06.png)
+![Login Page](/screenshots/Screenshot%202025-05-08%20at%2019.16.35.png)
 
-![Dashboard](/screenshots/Screenshot%202025-05-08%20at%2019.15.14.png)
+![Dashboard Page](/screenshots/Screenshot%202025-05-08%20at%2019.15.39.png)
 
-![Payment Initiation](/screenshots/Screenshot%202025-05-08%20at%2019.15.26.png)
+![Make Payment Page](/screenshots/Screenshot%202025-05-08%20at%2019.14.46.png)
 
-![Payment Status](/screenshots/Screenshot%202025-05-08%20at%2019.15.39.png)
+![Check Status Page](/screenshots/Screenshot%202025-05-08%20at%2019.15.06.png)
 
-![Transaction History](/screenshots/Screenshot%202025-05-08%20at%2019.15.48.png)
+![Ongoing Payments Page](/screenshots/Screenshot%202025-05-08%20at%2019.15.14.png)
+
+![Payment Details](/screenshots/Screenshot%202025-05-08%20at%2019.15.26.png)
 
 ![User Profile](/screenshots/Screenshot%202025-05-08%20at%2019.15.58.png)
 
-![Mobile View](/screenshots/Screenshot%202025-05-08%20at%2019.16.14.png)
-
-![API Response](/screenshots/Screenshot%202025-05-08%20at%2019.16.22.png)
-
-![Admin Dashboard](/screenshots/Screenshot%202025-05-08%20at%2019.16.35.png)
-
-![Authentication Flow](/screenshots/Screenshot%202025-05-08%20at%2019.14.46.png)
+![Change Password](/screenshots/Screenshot%202025-05-08%20at%2019.16.14.png)
 
 ![Transaction Flow](/screenshots/Screenshot%202025-05-08%20at%2019.14.57.png)
 
