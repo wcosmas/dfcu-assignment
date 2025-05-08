@@ -226,7 +226,7 @@ export default function TransactionsPage() {
             <div className="h-12 w-1.5 bg-gradient-to-b from-primary to-primary/40 rounded-full"></div>
             <div>
               <h1 className="text-3xl font-bold tracking-tight">
-                Transactions
+                Outgoing Payments
               </h1>
               <p className="text-muted-foreground mt-1">
                 View and manage your payment transactions
@@ -259,10 +259,10 @@ export default function TransactionsPage() {
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center">
                   <FiList className="mr-2 h-5 w-5 text-primary" />
-                  Transaction History
+                  Outgoing Transaction History
                 </CardTitle>
                 <CardDescription>
-                  {filteredTransactions.length} transactions found
+                  {filteredTransactions.length} payments found
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -318,6 +318,7 @@ export default function TransactionsPage() {
                         <TableRow>
                           <TableHead>Reference</TableHead>
                           <TableHead>Date</TableHead>
+                          <TableHead>To Account</TableHead>
                           <TableHead>Description</TableHead>
                           <TableHead className="text-right">Status</TableHead>
                           <TableHead className="text-right">Actions</TableHead>
@@ -337,6 +338,11 @@ export default function TransactionsPage() {
                                 <FiClock className="mr-1 h-3 w-3 text-muted-foreground" />
                                 {formatDate(transaction.timestamp)}
                               </div>
+                            </TableCell>
+                            <TableCell className="whitespace-nowrap">
+                              <span className="font-mono text-xs">
+                                {transaction.payeeAccountNumber}
+                              </span>
                             </TableCell>
                             <TableCell className="max-w-md truncate">
                               {transaction.message}
@@ -379,10 +385,10 @@ export default function TransactionsPage() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <StatusIcon status={selectedTransaction?.status || "PENDING"} />
-              Transaction Details
+              Payment Details
             </DialogTitle>
             <DialogDescription>
-              Detailed information about this transaction
+              Detailed information about this outgoing payment
             </DialogDescription>
           </DialogHeader>
 

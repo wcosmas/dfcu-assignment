@@ -114,7 +114,7 @@ export const getPaymentStatus = async (
 };
 
 /**
- * Get transaction history for the current user
+ * Get transaction history for the current user (only as payer)
  */
 export const getTransactionHistory = async (
     req: RequestWithUser,
@@ -128,13 +128,10 @@ export const getTransactionHistory = async (
 
         const userId = req.user.id;
 
-        // Fetch transactions where the user is either payer or payee
+        // Fetch transactions where the user is the payer only
         const transactions = await prisma.transaction.findMany({
             where: {
-                OR: [
-                    { payerId: userId },
-                    { payeeId: userId }
-                ]
+                payerId: userId  // Only transactions where user is the payer
             },
             orderBy: {
                 createdAt: 'desc'
@@ -154,7 +151,7 @@ export const getTransactionHistory = async (
             payerReference: transaction.payerReference,
             payerAccountNumber: transaction.payerAccountNumber,
             payeeAccountNumber: transaction.payeeAccountNumber,
-            type: transaction.payerId === userId ? 'SENT' : 'RECEIVED'
+            type: 'SENT'  // Always SENT since we're only fetching where user is payer
         }));
 
         res.status(200).json(formattedTransactions);

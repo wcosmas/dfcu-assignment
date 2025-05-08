@@ -3,7 +3,7 @@
 import React from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { PaymentForm } from "@/components/payment/PaymentForm";
-import { FiCreditCard, FiArrowRight, FiShield } from "react-icons/fi";
+import { FiArrowRight, FiShield } from "react-icons/fi";
 
 export default function PaymentInitiatePage() {
   return (

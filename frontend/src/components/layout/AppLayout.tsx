@@ -9,13 +9,13 @@ import {
   FiUser,
   FiLogOut,
   FiMenu,
-  FiX,
   FiList,
 } from "react-icons/fi";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/Button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { NavUser } from "./NavUser";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -32,8 +32,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     { name: "Dashboard", href: "/dashboard", icon: FiHome },
     { name: "Make Payment", href: "/payment/initiate", icon: FiCreditCard },
     { name: "Check Status", href: "/payment/status", icon: FiSearch },
-    { name: "Transactions", href: "/transactions", icon: FiList },
-    { name: "Profile", href: "/profile", icon: FiUser },
+    { name: "My Payments", href: "/transactions", icon: FiList },
   ];
 
   const NavItems = () => (
@@ -90,19 +89,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               </div>
             </div>
             <div className="border-t p-4">
-              <div className="flex items-center justify-between">
-                <div className="text-sm font-medium">
-                  {user?.username || "Guest"}
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={logout}
-                  aria-label="Logout"
-                >
-                  <FiLogOut className="h-4 w-4" />
-                </Button>
-              </div>
+              <NavUser user={user} logout={logout} />
             </div>
           </div>
         </SheetContent>
@@ -128,20 +115,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             </nav>
           </div>
           <div className="border-t p-4">
-            <div className="flex items-center justify-between">
-              <div className="text-sm font-medium">
-                {user?.username || "Guest"}
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={logout}
-                aria-label="Logout"
-                className="text-destructive hover:text-destructive/90 hover:bg-destructive/10"
-              >
-                <FiLogOut className="h-4 w-4" />
-              </Button>
-            </div>
+            <NavUser user={user} logout={logout} />
           </div>
         </div>
       </div>
