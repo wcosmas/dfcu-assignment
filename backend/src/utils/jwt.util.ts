@@ -1,6 +1,5 @@
 import { sign, verify, SignOptions } from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
-import { v4 as uuidv4 } from 'uuid';
 import { env } from '../config/env';
 
 const prisma = new PrismaClient();
@@ -8,16 +7,15 @@ const prisma = new PrismaClient();
 // Generate access token
 export const generateAccessToken = (userId: string): string => {
     const payload = { userId };
-    const options: SignOptions = { expiresIn: '1h' }
+    const options: SignOptions = {
+        expiresIn: env.accessTokenExpiry as any
+    };
 
     return sign(payload, env.jwtSecret, options);
 };
 
 // Generate refresh token
 export const generateRefreshToken = async (userId: string): Promise<string> => {
-    // Create token
-    const refreshToken = uuidv4();
-
     // Calculate expiry date
     const expiryDuration = env.refreshTokenExpiry;
     const expiryDate = new Date();
@@ -48,6 +46,13 @@ export const generateRefreshToken = async (userId: string): Promise<string> => {
         expiryDate.setDate(expiryDate.getDate() + 7);
     }
 
+    // Create JWT refresh token
+    const payload = { userId };
+    const options: SignOptions = {
+        expiresIn: expiryDuration as any
+    };
+    const refreshToken = sign(payload, env.jwtSecret, options);
+
     // Save refresh token to database
     await prisma.refreshToken.create({
         data: {
@@ -63,6 +68,9 @@ export const generateRefreshToken = async (userId: string): Promise<string> => {
 // Verify refresh token
 export const verifyRefreshToken = async (token: string): Promise<string | null> => {
     try {
+        // First verify the JWT signature
+        const decoded = verify(token, env.jwtSecret) as { userId: string };
+
         // Find token in database
         const refreshToken = await prisma.refreshToken.findUnique({
             where: { token },

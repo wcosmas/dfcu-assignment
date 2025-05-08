@@ -279,6 +279,11 @@ Access the application at:
 
 ## Application Screenshots
 
+Below are screenshots showcasing the backend documentation with swagger:
+![Sawgger Doc](/screenshots/Screenshot%202025-05-08%20at%2023.27.37.png)
+
+![Sawgger Doc](/screenshots/Screenshot%202025-05-08%20at%2023.28.00.png)
+
 Below are screenshots showcasing the application's frontend web interface and functionality:
 
 ![Login Page](/screenshots/Screenshot%202025-05-08%20at%2019.16.35.png)
