@@ -14,6 +14,7 @@ A secure, reliable payment processing system built with Node.js, Express, Next.j
   - [Configuration](#configuration)
   - [Running the Application](#running-the-application)
 - [API Documentation](#api-documentation)
+- [Application Screenshots](#application-screenshots)
 - [Testing](#testing)
 - [License](#license)
 
@@ -244,6 +245,32 @@ Access the application at:
 - **Get Profile**: `GET /api/users/profile`
 - **Update Profile**: `PUT /api/users/profile`
 
+## Application Screenshots
+
+Below are screenshots showcasing the application's frontend web interface and functionality:
+
+![Login Screen](/screenshots/Screenshot%202025-05-08%20at%2019.15.06.png)
+
+![Dashboard](/screenshots/Screenshot%202025-05-08%20at%2019.15.14.png)
+
+![Payment Initiation](/screenshots/Screenshot%202025-05-08%20at%2019.15.26.png)
+
+![Payment Status](/screenshots/Screenshot%202025-05-08%20at%2019.15.39.png)
+
+![Transaction History](/screenshots/Screenshot%202025-05-08%20at%2019.15.48.png)
+
+![User Profile](/screenshots/Screenshot%202025-05-08%20at%2019.15.58.png)
+
+![Mobile View](/screenshots/Screenshot%202025-05-08%20at%2019.16.14.png)
+
+![API Response](/screenshots/Screenshot%202025-05-08%20at%2019.16.22.png)
+
+![Admin Dashboard](/screenshots/Screenshot%202025-05-08%20at%2019.16.35.png)
+
+![Authentication Flow](/screenshots/Screenshot%202025-05-08%20at%2019.14.46.png)
+
+![Transaction Flow](/screenshots/Screenshot%202025-05-08%20at%2019.14.57.png)
+
 ## Testing
 
 ### Backend Testing
@@ -256,15 +283,6 @@ npm test
 
 # Run tests with coverage
 npm run test:coverage
-```
-
-### Frontend Testing
-
-```bash
-cd frontend
-
-# Run all tests
-npm test
 ```
 
 ## License
