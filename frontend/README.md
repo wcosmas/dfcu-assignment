@@ -15,6 +15,7 @@ This is the frontend application for the DFCU Bank Payment Gateway, a lightweigh
 - **Next.js 14**: React framework for server-side rendering and static site generation
 - **TypeScript**: Typed JavaScript for better developer experience
 - **TailwindCSS**: Utility-first CSS framework
+- **React Query**: Data fetching, caching and state management
 - **React Hook Form**: Form validation and handling
 - **Zod**: Schema validation
 - **Axios**: HTTP client for API requests
@@ -71,6 +72,10 @@ Adjust the API URL based on your backend setup.
 - `src/app`: Next.js pages using the App Router
 - `src/components`: Reusable React components
 - `src/hooks`: Custom React hooks
+  - `src/hooks/api`: React Query hooks for data fetching
+- `src/lib`: Utility libraries
+  - `src/lib/react-query.tsx`: React Query provider
+  - `src/lib/query-keys.ts`: Centralized query keys
 - `src/types`: TypeScript type definitions
 - `src/utils`: Utility functions
 
@@ -82,6 +87,19 @@ The authentication system uses JWT tokens with:
 - Refresh tokens (stored in localStorage)
 - Automatic token refresh
 - Protected routes with middleware
+
+## Data Fetching with React Query
+
+The application uses React Query for data fetching and state management:
+
+- Automatic caching and stale-while-revalidate pattern
+- Optimistic updates
+- Centralized query keys
+- Automatic error handling
+- Request deduplication
+- Background refetching
+
+For more details on the React Query implementation, see [React Query README](./src/hooks/api/README.md).
 
 ## Deployment
 

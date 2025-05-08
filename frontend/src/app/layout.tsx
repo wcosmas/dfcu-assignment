@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Gabarito } from "next/font/google";
 import "./globals.css";
+import { ReactQueryProvider } from "@/lib/react-query";
+import { Toaster } from "@/components/ui/sonner";
 
 const gabarito = Gabarito({
   subsets: ["latin"],
@@ -19,7 +21,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={gabarito.className}>{children}</body>
+      <body className={gabarito.className}>
+        <ReactQueryProvider>{children}</ReactQueryProvider>
+        <Toaster />
+      </body>
     </html>
   );
 }

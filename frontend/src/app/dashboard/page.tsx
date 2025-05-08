@@ -12,11 +12,11 @@ import {
   FiTrendingUp,
   FiTarget,
   FiActivity,
+  FiRefreshCw,
 } from "react-icons/fi";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/Button";
-import { useAuth } from "@/hooks/useAuth";
-import { usePayment } from "@/hooks/usePayment";
+import { useAuth, usePayment } from "@/hooks/api";
 import { PaymentStatus } from "@/types";
 import {
   Card,
@@ -29,6 +29,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 
 // Define cards outside the component to avoid recreation on each render
 const actionCards = [
@@ -74,13 +75,11 @@ export default function DashboardPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const {
-    getTransactionHistory,
-    loading: paymentLoading,
     transactions,
+    loading: paymentLoading,
+    refetchTransactions,
+    error: transactionError,
   } = usePayment();
-  const [recentTransactions, setRecentTransactions] = useState<PaymentStatus[]>(
-    []
-  );
   const [mockTransactions, setMockTransactions] = useState<PaymentStatus[]>([]);
 
   // Initialize mock data on client-side only
@@ -117,25 +116,42 @@ export default function DashboardPage() {
     ]);
   }, []);
 
+  // Show error toast when transaction error occurs
   useEffect(() => {
-    const fetchTransactions = async () => {
-      try {
-        await getTransactionHistory();
-      } catch (error) {
-        console.error("Failed to fetch transactions:", error);
-      }
-    };
-
-    fetchTransactions();
-  }, [getTransactionHistory]);
+    if (transactionError) {
+      toast.error("Error Fetching Transactions", {
+        description: "Failed to load your transactions. Please try again.",
+      });
+    }
+  }, [transactionError]);
 
   useEffect(() => {
-    setRecentTransactions(transactions.slice(0, 5));
-  }, [transactions]);
+    // Fetch transaction history on component mount
+    handleRefreshTransactions();
+  }, []);
+
+  // Handle refreshing transactions with toast feedback
+  const handleRefreshTransactions = async () => {
+    const refreshToast = toast.loading("Refreshing transactions...");
+    try {
+      await refetchTransactions();
+      toast.success("Transactions Updated", {
+        description: "Your transaction history has been refreshed.",
+        id: refreshToast,
+      });
+    } catch (error) {
+      toast.error("Refresh Failed", {
+        description: "Could not refresh transactions. Please try again.",
+        id: refreshToast,
+      });
+    }
+  };
 
   // Use either real data or mock data
   const displayTransactions =
-    recentTransactions.length > 0 ? recentTransactions : mockTransactions;
+    transactions && transactions.length > 0
+      ? transactions.slice(0, 5)
+      : mockTransactions;
 
   // Status badge variants
   const getStatusBadgeVariant = (status: string) => {
@@ -249,102 +265,223 @@ export default function DashboardPage() {
             </div>
           </motion.div>
 
+          {/* Dashboard metrics section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="mb-8"
+          >
+            <h2 className="text-xl font-semibold mb-4 flex items-center">
+              <FiActivity className="mr-2 h-5 w-5 text-primary" />
+              Overview
+            </h2>
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+              <Card className="shadow-sm hover:shadow-md transition-all duration-300">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-md font-medium text-muted-foreground">
+                    Total Transactions
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center">
+                    <div className="rounded-full bg-primary/10 p-2 mr-4">
+                      <FiDollarSign className="h-6 w-6 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-3xl font-bold">
+                        {transactions?.length || mockTransactions.length}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Since account creation
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="shadow-sm hover:shadow-md transition-all duration-300">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-md font-medium text-muted-foreground">
+                    Pending Transactions
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center">
+                    <div className="rounded-full bg-orange-100 p-2 mr-4">
+                      <FiClock className="h-6 w-6 text-orange-500" />
+                    </div>
+                    <div>
+                      <p className="text-3xl font-bold">
+                        {displayTransactions.filter(
+                          (tx) => tx.status === "PENDING"
+                        ).length || 0}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Awaiting confirmation
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="shadow-sm hover:shadow-md transition-all duration-300">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-md font-medium text-muted-foreground">
+                    Success Rate
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center">
+                    <div className="rounded-full bg-green-100 p-2 mr-4">
+                      <FiTrendingUp className="h-6 w-6 text-green-500" />
+                    </div>
+                    <div>
+                      <p className="text-3xl font-bold">
+                        {displayTransactions.length === 0
+                          ? "0%"
+                          : `${Math.round(
+                              (displayTransactions.filter(
+                                (tx) => tx.status === "SUCCESSFUL"
+                              ).length /
+                                displayTransactions.length) *
+                                100
+                            )}%`}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Successful transactions
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </motion.div>
+
           {/* Recent Transactions */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
           >
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold flex items-center">
-                <FiDollarSign className="mr-2 h-5 w-5 text-primary" />
+                <FiCreditCard className="mr-2 h-5 w-5 text-primary" />
                 Recent Transactions
               </h2>
-              {displayTransactions.length > 0 && (
-                <Link
-                  href="/payment/status"
-                  className="text-primary text-sm font-medium hover:underline flex items-center"
-                >
-                  View all
-                  <FiArrowUpRight className="ml-1 h-4 w-4" />
-                </Link>
-              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRefreshTransactions}
+                disabled={paymentLoading}
+                className="flex items-center gap-1"
+              >
+                <FiRefreshCw
+                  className={`h-4 w-4 ${paymentLoading ? "animate-spin" : ""}`}
+                />
+                {paymentLoading ? "Refreshing..." : "Refresh"}
+              </Button>
             </div>
-            <Card className="shadow-sm border-muted/20 backdrop-blur-sm overflow-hidden">
-              {displayTransactions.length > 0 ? (
-                <ul className="divide-y divide-muted/10">
-                  {displayTransactions.map((transaction, idx) => (
-                    <motion.li
-                      key={transaction.transactionReference}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.1 * idx }}
-                    >
-                      <div className="p-4 hover:bg-accent/30 transition-colors">
-                        <div className="flex items-center justify-between">
-                          <div className="truncate text-sm font-medium">
-                            {transaction.transactionReference}
-                          </div>
-                          <div className="ml-2 flex flex-shrink-0">
+
+            <Card className="shadow-sm overflow-hidden">
+              <div className="relative overflow-x-auto">
+                <table className="w-full text-sm text-left">
+                  <thead className="text-xs uppercase bg-muted/50">
+                    <tr>
+                      <th scope="col" className="px-6 py-3">
+                        Reference
+                      </th>
+                      <th scope="col" className="px-6 py-3">
+                        Status
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 hidden md:table-cell"
+                      >
+                        Date
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 hidden sm:table-cell"
+                      >
+                        Message
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-right">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-muted">
+                    {displayTransactions.length === 0 ? (
+                      <tr>
+                        <td
+                          colSpan={5}
+                          className="px-6 py-12 text-center text-muted-foreground"
+                        >
+                          No transactions found
+                        </td>
+                      </tr>
+                    ) : (
+                      displayTransactions.map((transaction) => (
+                        <tr
+                          key={transaction.transactionReference}
+                          className="bg-background hover:bg-muted/20 transition-colors"
+                        >
+                          <td className="px-6 py-4 font-medium">
+                            {transaction.transactionReference.substring(0, 8)}
+                            ...
+                          </td>
+                          <td className="px-6 py-4">
                             <Badge
-                              variant={
-                                getStatusBadgeVariant(transaction.status) as any
-                              }
-                              className="rounded-full px-3"
+                              variant={getStatusBadgeVariant(
+                                transaction.status
+                              )}
                             >
                               {transaction.status}
                             </Badge>
-                          </div>
-                        </div>
-                        <div className="mt-2 flex justify-between">
-                          <div className="flex">
-                            <div className="flex items-center text-sm text-muted-foreground">
-                              <FiClock className="mr-1.5 h-4 w-4 flex-shrink-0 text-muted-foreground" />
-                              <p>{formatDate(transaction.timestamp)}</p>
-                            </div>
-                          </div>
-                          <Link
-                            href={`/payment/status?ref=${transaction.transactionReference}`}
-                            className="text-primary flex items-center text-sm font-medium hover:underline"
-                          >
-                            View details
-                            <FiArrowUpRight className="ml-1 h-3 w-3" />
-                          </Link>
-                        </div>
-                      </div>
-                    </motion.li>
-                  ))}
-                </ul>
-              ) : (
-                <CardContent className="py-16 text-center">
-                  <motion.div
-                    initial={{ scale: 0.9, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 24 }}
-                  >
-                    <div className="bg-primary/5 p-4 rounded-full w-16 h-16 flex items-center justify-center mx-auto">
-                      <FiDollarSign className="h-8 w-8 text-primary" />
-                    </div>
-                    <h3 className="mt-4 text-lg font-medium">
-                      No transactions yet
-                    </h3>
-                    <p className="mt-2 text-sm text-muted-foreground max-w-sm mx-auto">
-                      When you make payments, they'll appear here for easy
-                      tracking and management.
-                    </p>
-                    <div className="mt-6">
-                      <Button
-                        onClick={() => router.push("/payment/initiate")}
-                        size="lg"
-                        className="group"
-                      >
-                        Make your first payment
-                        <FiArrowUpRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
-                      </Button>
-                    </div>
-                  </motion.div>
-                </CardContent>
-              )}
+                          </td>
+                          <td className="px-6 py-4 hidden md:table-cell">
+                            {transaction.timestamp
+                              ? formatDate(transaction.timestamp)
+                              : "N/A"}
+                          </td>
+                          <td className="px-6 py-4 hidden sm:table-cell text-muted-foreground truncate max-w-[200px]">
+                            {transaction.message}
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() =>
+                                router.push(
+                                  `/payment/status?ref=${transaction.transactionReference}`
+                                )
+                              }
+                              className="text-xs h-auto py-1"
+                            >
+                              Details
+                            </Button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              <CardFooter className="border-t flex justify-between p-4">
+                <p className="text-xs text-muted-foreground">
+                  Showing {displayTransactions.length} of{" "}
+                  {transactions?.length || mockTransactions.length} transactions
+                </p>
+
+                <Link
+                  href="/transactions"
+                  className="text-xs text-primary hover:underline"
+                >
+                  View All
+                </Link>
+              </CardFooter>
             </Card>
           </motion.div>
         </div>

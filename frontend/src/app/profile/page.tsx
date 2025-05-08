@@ -8,7 +8,7 @@ import { z } from "zod";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/Button";
 import { FormInput } from "@/components/ui/form-input";
-import { useAuth } from "@/hooks/useAuth";
+import { useUserProfile } from "@/hooks/api";
 import { FiUser, FiMail, FiLock, FiSave, FiRefreshCw } from "react-icons/fi";
 import {
   Card,
@@ -21,6 +21,8 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { AxiosError } from "axios";
+import { toast } from "sonner";
 
 // Form validation schema
 const profileSchema = z
@@ -76,10 +78,8 @@ type ProfileFormValues = z.infer<typeof profileSchema>;
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { user, loading: authLoading, updateProfile } = useAuth();
-  const [updating, setUpdating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  const { profile, isLoading, updateProfile, isUpdating, updateError } =
+    useUserProfile();
 
   const {
     register,
@@ -99,29 +99,39 @@ export default function ProfilePage() {
 
   // Populate form when user data is loaded
   useEffect(() => {
-    if (user) {
+    if (profile) {
       reset({
-        fullName: user.fullName || "",
-        email: user.email || "",
+        fullName: profile.fullName || "",
+        email: profile.email || "",
         currentPassword: "",
         newPassword: "",
         confirmPassword: "",
       });
     }
-  }, [user, reset]);
+  }, [profile, reset]);
+
+  // Show error toast when update error occurs
+  useEffect(() => {
+    if (updateError) {
+      const errorMessage =
+        updateError instanceof AxiosError
+          ? updateError.response?.data?.message
+          : "Failed to update profile. Please try again.";
+
+      toast.error("Update Failed", {
+        description: errorMessage,
+      });
+    }
+  }, [updateError]);
 
   // Redirect to login if not authenticated
   useEffect(() => {
-    if (!authLoading && !user) {
+    if (!isLoading && !profile) {
       router.push("/auth/login");
     }
-  }, [authLoading, user, router]);
+  }, [isLoading, profile, router]);
 
   const onSubmit = async (data: ProfileFormValues) => {
-    setError(null);
-    setSuccess(null);
-    setUpdating(true);
-
     try {
       // Prepare update data (exclude confirmPassword)
       const updateData: any = {
@@ -136,7 +146,10 @@ export default function ProfilePage() {
       }
 
       await updateProfile(updateData);
-      setSuccess("Profile updated successfully");
+
+      toast.success("Profile Updated", {
+        description: "Your profile has been updated successfully",
+      });
 
       // Clear password fields after successful update
       reset({
@@ -147,16 +160,10 @@ export default function ProfilePage() {
       });
     } catch (err: any) {
       console.error("Profile update error:", err);
-      setError(
-        err.response?.data?.message ||
-          "Failed to update profile. Please try again."
-      );
-    } finally {
-      setUpdating(false);
     }
   };
 
-  if (authLoading) {
+  if (isLoading) {
     return (
       <AppLayout>
         <div className="flex items-center justify-center min-h-[70vh]">
@@ -187,9 +194,9 @@ export default function ProfilePage() {
             <CardHeader className="bg-muted/50">
               <div className="flex items-center justify-between">
                 <CardTitle>Account Information</CardTitle>
-                {user && (
+                {profile && (
                   <Badge variant="outline" className="text-xs">
-                    {user.role}
+                    {profile.role}
                   </Badge>
                 )}
               </div>
@@ -198,18 +205,6 @@ export default function ProfilePage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
-              {error && (
-                <Alert variant="destructive" className="mb-6">
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
-
-              {success && (
-                <Alert className="mb-6 bg-green-50 text-green-800 border-green-200">
-                  <AlertDescription>{success}</AlertDescription>
-                </Alert>
-              )}
-
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                 <div className="space-y-4">
                   <h3 className="text-lg font-medium">Personal Information</h3>
@@ -232,13 +227,13 @@ export default function ProfilePage() {
                     {...register("email")}
                   />
 
-                  {user && (
+                  {profile && profile.accountNumber && (
                     <div className="bg-muted/30 p-4 rounded-md">
                       <div className="text-sm font-medium mb-1">
                         Account Number
                       </div>
                       <div className="text-md font-mono bg-background py-2 px-3 rounded border">
-                        {user.accountNumber}
+                        {profile.accountNumber}
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">
                         Your account number cannot be changed
@@ -250,16 +245,15 @@ export default function ProfilePage() {
                 <Separator />
 
                 <div className="space-y-4">
-                  <h3 className="text-lg font-medium">Change Password</h3>
+                  <h3 className="text-lg font-medium">Password</h3>
                   <p className="text-sm text-muted-foreground">
-                    Leave the password fields empty if you don't want to change
-                    it
+                    Leave fields empty to keep your current password
                   </p>
 
                   <FormInput
                     id="currentPassword"
-                    label="Current Password"
                     type="password"
+                    label="Current Password"
                     placeholder="Enter your current password"
                     leftIcon={<FiLock className="h-5 w-5" />}
                     error={errors.currentPassword?.message}
@@ -268,9 +262,9 @@ export default function ProfilePage() {
 
                   <FormInput
                     id="newPassword"
-                    label="New Password"
                     type="password"
-                    placeholder="Enter a new password"
+                    label="New Password"
+                    placeholder="Enter a new secure password"
                     leftIcon={<FiLock className="h-5 w-5" />}
                     error={errors.newPassword?.message}
                     {...register("newPassword")}
@@ -278,8 +272,8 @@ export default function ProfilePage() {
 
                   <FormInput
                     id="confirmPassword"
-                    label="Confirm Password"
                     type="password"
+                    label="Confirm Password"
                     placeholder="Confirm your new password"
                     leftIcon={<FiLock className="h-5 w-5" />}
                     error={errors.confirmPassword?.message}
@@ -287,40 +281,19 @@ export default function ProfilePage() {
                   />
                 </div>
 
-                <div className="pt-2">
-                  <Button type="submit" className="w-full" disabled={updating}>
-                    {updating ? (
-                      <>
-                        <svg
-                          className="animate-spin -ml-1 mr-2 h-4 w-4"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                          ></circle>
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          ></path>
-                        </svg>
-                        Updating...
-                      </>
-                    ) : (
-                      <>
-                        <FiSave className="mr-2 h-4 w-4" />
-                        Save Changes
-                      </>
-                    )}
-                  </Button>
-                </div>
+                <Button type="submit" disabled={isUpdating}>
+                  {isUpdating ? (
+                    <>
+                      <FiRefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                      Updating...
+                    </>
+                  ) : (
+                    <>
+                      <FiSave className="mr-2 h-4 w-4" />
+                      Save Changes
+                    </>
+                  )}
+                </Button>
               </form>
             </CardContent>
           </Card>

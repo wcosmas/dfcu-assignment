@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { FiUser, FiLock, FiAlertCircle } from "react-icons/fi";
+import { FiUser, FiLock } from "react-icons/fi";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FormInput } from "../ui/form-input";
 import { Button } from "../ui/Button";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/api";
 import { LoginRequest } from "@/types";
 import {
   Card,
@@ -17,7 +17,7 @@ import {
   CardContent,
   CardFooter,
 } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { toast } from "sonner";
 
 const loginFormSchema = z.object({
   username: z.string().min(1, "Username is required"),
@@ -27,15 +27,14 @@ const loginFormSchema = z.object({
 type LoginFormValues = z.infer<typeof loginFormSchema>;
 
 export function LoginForm() {
-  const [generalError, setGeneralError] = useState<string | null>(null);
   const [logoError, setLogoError] = useState(false);
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, loading } = useAuth();
 
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginFormSchema),
     defaultValues: {
@@ -45,16 +44,19 @@ export function LoginForm() {
   });
 
   const onSubmit = async (data: LoginFormValues) => {
-    setGeneralError(null);
-
     try {
       await login(data as LoginRequest);
+      toast.success("Login Successful", {
+        description: "Welcome back! Redirecting to dashboard...",
+      });
       router.push("/dashboard");
     } catch (error: any) {
       console.error("Login error:", error);
       const message =
         error.response?.data?.message || "Login failed. Please try again.";
-      setGeneralError(message);
+      toast.error("Login Failed", {
+        description: message,
+      });
     }
   };
 
@@ -81,13 +83,6 @@ export function LoginForm() {
       </CardHeader>
 
       <CardContent className="space-y-4 pt-6">
-        {generalError && (
-          <Alert variant="destructive" className="text-sm">
-            <FiAlertCircle className="h-4 w-4" />
-            <AlertDescription>{generalError}</AlertDescription>
-          </Alert>
-        )}
-
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <FormInput
             id="username"
@@ -113,9 +108,9 @@ export function LoginForm() {
             type="submit"
             className="w-full mt-2"
             size="lg"
-            disabled={isSubmitting}
+            disabled={loading}
           >
-            {isSubmitting ? (
+            {loading ? (
               <>
                 <svg
                   className="animate-spin -ml-1 mr-2 h-4 w-4"

@@ -14,8 +14,8 @@ import {
 } from "react-icons/fi";
 import { FormInput } from "@/components/ui/FormInput";
 import { Button } from "@/components/ui/Button";
-import { usePayment } from "@/hooks/usePayment";
-import { PaymentRequest, PaymentResponse } from "@/types";
+import { usePaymentWithToast } from "@/hooks/api";
+import { PaymentRequest } from "@/types";
 import {
   Card,
   CardHeader,
@@ -51,14 +51,7 @@ const paymentFormSchema = z.object({
 type PaymentFormValues = z.infer<typeof paymentFormSchema>;
 
 export function PaymentForm() {
-  const {
-    initiatePayment,
-    loading,
-    error: apiError,
-    paymentResult,
-    resetState,
-  } = usePayment();
-  const [generalError, setGeneralError] = useState<string | null>(null);
+  const { initiatePayment, loading, paymentResult } = usePaymentWithToast();
 
   const {
     register,
@@ -77,9 +70,6 @@ export function PaymentForm() {
   });
 
   const onSubmit = async (data: PaymentFormValues) => {
-    setGeneralError(null);
-    resetState();
-
     try {
       const paymentRequest: PaymentRequest = {
         payer: data.payer,
@@ -92,14 +82,10 @@ export function PaymentForm() {
       await initiatePayment(paymentRequest);
     } catch (error: any) {
       console.error("Payment error:", error);
-      const message =
-        error.response?.data?.message || "Payment failed. Please try again.";
-      setGeneralError(message);
     }
   };
 
   const handleNewPayment = () => {
-    resetState();
     reset();
   };
 
@@ -209,34 +195,6 @@ export function PaymentForm() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {generalError && (
-          <div className="rounded-md bg-red-50 p-4 mb-6">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <FiAlertCircle className="h-5 w-5 text-red-400" />
-              </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800">
-                  {generalError}
-                </h3>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {apiError && (
-          <div className="rounded-md bg-red-50 p-4 mb-6">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <FiAlertCircle className="h-5 w-5 text-red-400" />
-              </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800">{apiError}</h3>
-              </div>
-            </div>
-          </div>
-        )}
-
         <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
           <FormInput
             id="payer"
@@ -263,26 +221,28 @@ export function PaymentForm() {
               id="amount"
               type="text"
               label="Amount"
-              placeholder="e.g. 1000.00"
+              placeholder="0.00"
               leftIcon={<FiDollarSign className="h-5 w-5" />}
               error={errors.amount?.message}
               {...register("amount")}
             />
 
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               <label
-                className="text-sm font-medium leading-none text-gray-700 dark:text-gray-300"
                 htmlFor="currency"
+                className="block text-sm font-medium text-gray-700"
               >
                 Currency
               </label>
-              <div className="relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                  <FiGlobe className="h-5 w-5" />
+              <div className="relative rounded-md shadow-sm">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <FiGlobe className="h-5 w-5 text-gray-400" />
                 </div>
                 <select
                   id="currency"
-                  className="flex h-9 w-full rounded-md border border-gray-300 bg-transparent pl-10 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
+                  className={`appearance-none block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm ${
+                    errors.currency ? "border-red-500" : ""
+                  }`}
                   {...register("currency")}
                 >
                   <option value="UGX">UGX</option>
@@ -290,12 +250,12 @@ export function PaymentForm() {
                   <option value="EUR">EUR</option>
                   <option value="GBP">GBP</option>
                 </select>
+                {errors.currency && (
+                  <p className="mt-2 text-sm text-red-600">
+                    {errors.currency.message}
+                  </p>
+                )}
               </div>
-              {errors.currency?.message && (
-                <p className="text-sm text-red-500">
-                  {errors.currency.message}
-                </p>
-              )}
             </div>
           </div>
 
@@ -303,14 +263,20 @@ export function PaymentForm() {
             id="payerReference"
             type="text"
             label="Reference (Optional)"
-            placeholder="Optional payment reference"
+            placeholder="Enter reference for this payment"
             leftIcon={<FiFileText className="h-5 w-5" />}
             error={errors.payerReference?.message}
             {...register("payerReference")}
           />
 
-          <Button type="submit" fullWidth size="lg" isLoading={loading}>
-            Make Payment
+          <Button
+            fullWidth
+            type="submit"
+            size="lg"
+            isLoading={loading}
+            disabled={loading}
+          >
+            {loading ? "Processing..." : "Make Payment"}
           </Button>
         </form>
       </CardContent>
