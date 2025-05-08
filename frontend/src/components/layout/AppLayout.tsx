@@ -2,17 +2,9 @@ import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import {
-  FiHome,
-  FiCreditCard,
-  FiSearch,
-  FiUser,
-  FiLogOut,
-  FiMenu,
-  FiList,
-} from "react-icons/fi";
+import { FiHome, FiCreditCard, FiSearch, FiMenu, FiList } from "react-icons/fi";
 import { useAuth } from "@/hooks/useAuth";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { NavUser } from "./NavUser";
@@ -23,8 +15,6 @@ interface AppLayoutProps {
 
 export function AppLayout({ children }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [mobileLogo, setMobileLogo] = useState<"image" | "fallback">("image");
-  const [desktopLogo, setDesktopLogo] = useState<"image" | "fallback">("image");
   const pathname = usePathname();
   const { user, logout } = useAuth();
 
@@ -106,7 +96,6 @@ export function AppLayout({ children }: AppLayoutProps) {
               height={48}
               className="h-10 w-auto"
               priority
-              onError={() => setDesktopLogo("fallback")}
             />
           </div>
           <div className="flex-1 overflow-auto py-6">

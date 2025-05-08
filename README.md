@@ -17,6 +17,7 @@ A secure, reliable payment processing system built with Node.js, Express, Next.j
 - [Application Screenshots](#application-screenshots)
 - [Testing](#testing)
 - [License](#license)
+- [Docker Deployment](#docker-deployment)
 
 ## Project Overview
 
@@ -170,7 +171,7 @@ JWT_ACCESS_EXPIRES_IN=15m
 JWT_REFRESH_EXPIRES_IN=7d
 
 # Server
-PORT=8000
+PORT=3001
 NODE_ENV=development
 ```
 
@@ -248,8 +249,8 @@ npm start
 Access the application at:
 
 - Frontend: http://localhost:3000
-- Backend API: http://localhost:8000/api
-- API Documentation: http://localhost:8000/api-docs
+- Backend API: http://localhost:3001/api
+- API Documentation: http://localhost:3001/api-docs
 
 ## API Documentation
 
@@ -310,3 +311,66 @@ npm run test:coverage
 ## License
 
 This project is licensed under the ISC License.
+
+## Docker Deployment
+
+### Prerequisites
+
+- Docker
+- Docker Compose
+
+### Setup
+
+1. Clone this repository
+2. Create a `.env` file in the root directory based on the `.env.example` template:
+   ```bash
+   cp .env.example .env
+   ```
+3. Modify the `.env` file with your environment-specific values
+
+### Running with Docker Compose
+
+To start all services:
+
+```bash
+docker-compose up -d
+```
+
+This will start:
+
+- PostgreSQL database
+- Backend API service (http://localhost:3001)
+- Frontend web application (http://localhost:3000)
+
+### Stopping the Services
+
+```bash
+docker-compose down
+```
+
+### Viewing Logs
+
+```bash
+# All services
+docker-compose logs -f
+
+# Specific service
+docker-compose logs -f backend
+docker-compose logs -f frontend
+```
+
+### Rebuilding Services
+
+After making changes to the code:
+
+```bash
+docker-compose up -d --build
+```
+
+### Database Management
+
+To access the PostgreSQL database:
+
+```bash
+docker exec -it dfcu-postgres psql -U postgres -d dfcu_payment_gateway
+```

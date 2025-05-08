@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { authApi } from '@/api/auth';
 import { userApi } from '@/api/user';
-import { AuthResponse, LoginRequest, User, UpdateProfileRequest, UserProfile } from '@/types';
+import { LoginRequest, User, UpdateProfileRequest, UserProfile } from '@/types';
 import Cookies from 'js-cookie';
 
 export function useAuth() {
@@ -75,8 +75,10 @@ export function useAuth() {
             }
 
             return response;
-        } catch (err: any) {
-            const message = err.response?.data?.message || 'Authentication failed';
+        } catch (err: unknown) {
+            const message = err instanceof Error && 'response' in err
+                ? (err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Authentication failed'
+                : 'Authentication failed';
             setError(message);
             throw err;
         } finally {
@@ -103,8 +105,10 @@ export function useAuth() {
             }
 
             return updatedProfile;
-        } catch (err: any) {
-            const message = err.response?.data?.message || 'Profile update failed';
+        } catch (err: unknown) {
+            const message = err instanceof Error && 'response' in err
+                ? (err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Profile update failed'
+                : 'Profile update failed';
             setError(message);
             throw err;
         } finally {

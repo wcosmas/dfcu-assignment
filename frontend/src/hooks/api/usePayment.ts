@@ -18,32 +18,6 @@ export function usePayment() {
         (paymentData) => paymentApi.initiatePayment(paymentData)
     );
 
-    // Check payment status query
-    const checkPaymentStatus = (transactionReference: string) => {
-        const {
-            data: statusResult,
-            isLoading: isCheckingStatus,
-            error: checkStatusError,
-            refetch,
-        } = useApiQuery<PaymentStatus>(
-            QUERY_KEYS.PAYMENT.STATUS(transactionReference),
-            () => paymentApi.checkPaymentStatus(transactionReference),
-            {
-                enabled: !!transactionReference,
-                // Don't refetch automatically, allow manual polling
-                refetchOnWindowFocus: false,
-                staleTime: 0,
-            }
-        );
-
-        return {
-            statusResult,
-            isCheckingStatus,
-            checkStatusError,
-            refetch,
-        };
-    };
-
     // Get transaction history query
     const {
         data: transactions = [],
@@ -77,6 +51,11 @@ export function usePayment() {
         const result = await refetchTransactions();
         return result.data || [];
     }, [refetchTransactions]);
+
+    // Use a plain function for checking payment status that doesn't call a hook
+    const checkPaymentStatus = useCallback((transactionReference: string) => {
+        return paymentApi.checkPaymentStatus(transactionReference);
+    }, []);
 
     return {
         // Data

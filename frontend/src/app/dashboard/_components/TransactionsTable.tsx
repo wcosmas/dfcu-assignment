@@ -4,7 +4,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { FiCreditCard, FiRefreshCw } from "react-icons/fi";
 
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/custom-button";
 import { Card, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 

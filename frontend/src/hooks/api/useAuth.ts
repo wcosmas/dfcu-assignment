@@ -9,7 +9,6 @@ import { userApi } from '@/api/user';
 import { AuthResponse, LoginRequest, UpdateProfileRequest, User, UserProfile } from '@/types';
 import Cookies from 'js-cookie';
 import { useQueryClient } from '@tanstack/react-query';
-import { AxiosError } from 'axios';
 import { QUERY_KEYS } from '@/lib/query-keys';
 
 export function useAuth() {
@@ -104,7 +103,7 @@ export function useAuth() {
     const {
         mutate: logoutMutation,
         isPending: isLoggingOut
-    } = useApiMutation<any, string>(
+    } = useApiMutation<{ message: string }, string>(
         (refreshToken) => authApi.logout(refreshToken),
         {
             onSuccess: () => {

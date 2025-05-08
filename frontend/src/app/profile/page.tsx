@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import { FormInput } from "@/components/ui/form-input";
 import { useUserProfile } from "@/hooks/api";
 import { FiUser, FiMail, FiLock, FiSave, FiRefreshCw } from "react-icons/fi";
@@ -14,11 +14,9 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { AxiosError } from "axios";
@@ -134,7 +132,12 @@ export default function ProfilePage() {
   const onSubmit = async (data: ProfileFormValues) => {
     try {
       // Prepare update data (exclude confirmPassword)
-      const updateData: any = {
+      const updateData: {
+        fullName: string;
+        email: string;
+        currentPassword?: string;
+        newPassword?: string;
+      } = {
         fullName: data.fullName,
         email: data.email,
       };
@@ -158,7 +161,7 @@ export default function ProfilePage() {
         newPassword: "",
         confirmPassword: "",
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Profile update error:", err);
     }
   };

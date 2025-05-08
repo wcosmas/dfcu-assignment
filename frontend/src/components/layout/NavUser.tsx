@@ -21,7 +21,7 @@ import {
 import { User, UserProfile } from "@/types";
 import { useRouter } from "next/navigation";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 
 interface NavUserProps {
   user: User | UserProfile | null;

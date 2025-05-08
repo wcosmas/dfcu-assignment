@@ -18,8 +18,10 @@ export function usePayment() {
             const response = await paymentApi.initiatePayment(paymentData);
             setPaymentResult(response);
             return response;
-        } catch (err: any) {
-            const message = err.response?.data?.message || 'Payment initiation failed';
+        } catch (err: unknown) {
+            const message = err instanceof Error && 'response' in err
+                ? (err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Payment initiation failed'
+                : 'Payment initiation failed';
             setError(message);
             throw err;
         } finally {
@@ -36,8 +38,10 @@ export function usePayment() {
             const response = await paymentApi.checkPaymentStatus(transactionReference);
             setStatusResult(response);
             return response;
-        } catch (err: any) {
-            const message = err.response?.data?.message || 'Failed to check payment status';
+        } catch (err: unknown) {
+            const message = err instanceof Error && 'response' in err
+                ? (err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to check payment status'
+                : 'Failed to check payment status';
             setError(message);
             throw err;
         } finally {
@@ -95,8 +99,10 @@ export function usePayment() {
 
             setTransactions(enhancedResponse);
             return enhancedResponse;
-        } catch (err: any) {
-            const message = err.response?.data?.message || 'Failed to fetch transaction history';
+        } catch (err: unknown) {
+            const message = err instanceof Error && 'response' in err
+                ? (err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to fetch transaction history'
+                : 'Failed to fetch transaction history';
             setError(message);
             throw err;
         } finally {

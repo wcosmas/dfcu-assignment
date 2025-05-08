@@ -17,14 +17,13 @@ import {
 } from "./_components";
 
 export default function DashboardPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user } = useAuth();
 
   // Use React Query to fetch transaction data
   const {
     data: transactions = [],
     isLoading,
     isError,
-    error,
     refetch,
     isRefetching,
   } = useQuery({
@@ -35,18 +34,18 @@ export default function DashboardPage() {
 
   // Show error toast when transaction error occurs
   useEffect(() => {
-    if (isError && error) {
+    if (isError) {
       toast.error("Error Fetching Transactions", {
         description: "Failed to load your transactions. Please try again.",
       });
     }
-  }, [isError, error]);
+  }, [isError]);
 
   // Handle refreshing transactions with toast feedback
   const handleRefreshTransactions = async () => {
     try {
       await refetch();
-    } catch (error) {
+    } catch {
       toast.error("Refresh Failed", {
         description: "Could not refresh transactions. Please try again.",
       });

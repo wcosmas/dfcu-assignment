@@ -72,7 +72,7 @@ export function useApiMutation<TData, TVariables, TError = AxiosError>(
                 // Try to extract message from Axios error
                 if (error instanceof AxiosError && error.response?.data) {
                     // Safely access the message property if it exists
-                    const responseData = error.response.data as Record<string, any>;
+                    const responseData = error.response.data as Record<string, unknown>;
                     if (responseData.message && typeof responseData.message === 'string') {
                         errorMessage = responseData.message;
                     }

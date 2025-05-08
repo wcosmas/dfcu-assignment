@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { FiUser, FiLock } from "react-icons/fi";
@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FormInput } from "../ui/form-input";
-import { Button } from "../ui/Button";
+import { Button } from "../ui/button";
 import { useAuth } from "@/hooks/api";
 import { LoginRequest } from "@/types";
 import {
@@ -18,6 +18,7 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { toast } from "sonner";
+import { AxiosError } from "axios";
 
 const loginFormSchema = z.object({
   username: z.string().min(1, "Username is required"),
@@ -27,7 +28,6 @@ const loginFormSchema = z.object({
 type LoginFormValues = z.infer<typeof loginFormSchema>;
 
 export function LoginForm() {
-  const [logoError, setLogoError] = useState(false);
   const router = useRouter();
   const { login, loading } = useAuth();
 
@@ -50,10 +50,12 @@ export function LoginForm() {
         description: "Welcome back! Redirecting to dashboard...",
       });
       router.push("/dashboard");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Login error:", error);
       const message =
-        error.response?.data?.message || "Login failed. Please try again.";
+        error instanceof AxiosError
+          ? error.response?.data?.message
+          : "Login failed. Please try again.";
       toast.error("Login Failed", {
         description: message,
       });
@@ -71,7 +73,6 @@ export function LoginForm() {
             height={80}
             className="h-10 w-auto"
             priority
-            onError={() => setLogoError(true)}
           />
         </div>
         <CardTitle className="text-2xl font-bold text-center">

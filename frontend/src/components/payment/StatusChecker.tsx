@@ -12,7 +12,7 @@ import {
 import { usePayment } from "@/hooks/usePayment";
 
 import { FormInput } from "@/components/ui/form-input";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -76,12 +76,21 @@ export function StatusChecker({ transactionRef }: StatusCheckerProps) {
 
     try {
       await checkPaymentStatus(data.transactionReference);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Status check error:", error);
       const message =
-        error.response?.data?.message ||
-        "Failed to check payment status. Please try again.";
-      setGeneralError(message);
+        error &&
+        typeof error === "object" &&
+        "response" in error &&
+        error.response &&
+        typeof error.response === "object" &&
+        "data" in error.response &&
+        error.response.data &&
+        typeof error.response.data === "object" &&
+        "message" in error.response.data
+          ? error.response.data.message
+          : "Failed to check payment status. Please try again.";
+      setGeneralError(message as string);
     }
   };
 
@@ -190,7 +199,15 @@ export function StatusChecker({ transactionRef }: StatusCheckerProps) {
           <CardHeader className="bg-primary text-primary-foreground rounded-t-lg">
             <div className="flex items-center justify-between">
               <CardTitle>Transaction Details</CardTitle>
-              <Badge variant={getStatusVariant(statusResult.statusCode) as any}>
+              <Badge
+                variant={
+                  getStatusVariant(statusResult.statusCode) as
+                    | "outline"
+                    | "success"
+                    | "destructive"
+                    | "secondary"
+                }
+              >
                 {statusResult.status}
               </Badge>
             </div>

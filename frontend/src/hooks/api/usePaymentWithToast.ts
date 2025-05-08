@@ -8,6 +8,71 @@ import { useApiQuery } from './useApiQueries';
 import { QUERY_KEYS } from '@/lib/query-keys';
 import { toast } from 'sonner';
 
+// Separate hook for checking payment status
+export function useCheckPaymentStatus(transactionReference: string) {
+    const {
+        data: statusResult,
+        isLoading: isCheckingStatus,
+        error: checkStatusError,
+        refetch,
+    } = useApiQuery<PaymentStatus>(
+        QUERY_KEYS.PAYMENT.STATUS(transactionReference),
+        () => paymentApi.checkPaymentStatus(transactionReference),
+        {
+            enabled: !!transactionReference,
+            // Don't refetch automatically, allow manual polling
+            refetchOnWindowFocus: false,
+            staleTime: 0,
+        }
+    );
+
+    // Enhanced refetch with toast
+    const refetchWithToast = async () => {
+        const refreshToast = toast.loading('Checking payment status...');
+        try {
+            const result = await refetch();
+
+            // Show different toast based on payment status
+            if (result.data?.status === 'SUCCESSFUL') {
+                toast.success('Payment Successful', {
+                    id: refreshToast,
+                    description: 'Your payment has been successfully processed.',
+                });
+            } else if (result.data?.status === 'PENDING') {
+                toast.info('Payment Pending', {
+                    id: refreshToast,
+                    description: 'Your payment is still being processed.',
+                });
+            } else if (result.data?.status === 'FAILED') {
+                toast.error('Payment Failed', {
+                    id: refreshToast,
+                    description: result.data.message || 'Your payment could not be processed.',
+                });
+            } else {
+                toast.success('Status Updated', {
+                    id: refreshToast,
+                    description: 'Payment status has been updated.',
+                });
+            }
+
+            return result;
+        } catch (error) {
+            toast.error('Status Check Failed', {
+                id: refreshToast,
+                description: 'Failed to check payment status. Please try again.',
+            });
+            throw error;
+        }
+    };
+
+    return {
+        statusResult,
+        isCheckingStatus,
+        checkStatusError,
+        refetch: refetchWithToast,
+    };
+}
+
 export function usePaymentWithToast() {
     // Initiate payment mutation with toast
     const {
@@ -27,71 +92,6 @@ export function usePaymentWithToast() {
             errorTitle: 'Payment Failed',
         }
     );
-
-    // Check payment status query
-    const checkPaymentStatus = (transactionReference: string) => {
-        const {
-            data: statusResult,
-            isLoading: isCheckingStatus,
-            error: checkStatusError,
-            refetch,
-        } = useApiQuery<PaymentStatus>(
-            QUERY_KEYS.PAYMENT.STATUS(transactionReference),
-            () => paymentApi.checkPaymentStatus(transactionReference),
-            {
-                enabled: !!transactionReference,
-                // Don't refetch automatically, allow manual polling
-                refetchOnWindowFocus: false,
-                staleTime: 0,
-            }
-        );
-
-        // Enhanced refetch with toast
-        const refetchWithToast = async () => {
-            const refreshToast = toast.loading('Checking payment status...');
-            try {
-                const result = await refetch();
-
-                // Show different toast based on payment status
-                if (result.data?.status === 'SUCCESSFUL') {
-                    toast.success('Payment Successful', {
-                        id: refreshToast,
-                        description: 'Your payment has been successfully processed.',
-                    });
-                } else if (result.data?.status === 'PENDING') {
-                    toast.info('Payment Pending', {
-                        id: refreshToast,
-                        description: 'Your payment is still being processed.',
-                    });
-                } else if (result.data?.status === 'FAILED') {
-                    toast.error('Payment Failed', {
-                        id: refreshToast,
-                        description: result.data.message || 'Your payment could not be processed.',
-                    });
-                } else {
-                    toast.success('Status Updated', {
-                        id: refreshToast,
-                        description: 'Payment status has been updated.',
-                    });
-                }
-
-                return result;
-            } catch (error) {
-                toast.error('Status Check Failed', {
-                    id: refreshToast,
-                    description: 'Failed to check payment status. Please try again.',
-                });
-                throw error;
-            }
-        };
-
-        return {
-            statusResult,
-            isCheckingStatus,
-            checkStatusError,
-            refetch: refetchWithToast,
-        };
-    };
 
     // Get transaction history query with toast
     const {
@@ -150,7 +150,7 @@ export function usePaymentWithToast() {
         error: initiatePaymentError || transactionsError,
         // Methods
         initiatePayment,
-        checkPaymentStatus,
+        checkPaymentStatus: useCheckPaymentStatus,
         refetchTransactions,
     };
 } 
