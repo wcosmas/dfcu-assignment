@@ -3,7 +3,16 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { FiCreditCard, FiSearch, FiDollarSign, FiClock } from "react-icons/fi";
+import {
+  FiCreditCard,
+  FiSearch,
+  FiDollarSign,
+  FiClock,
+  FiArrowUpRight,
+  FiTrendingUp,
+  FiTarget,
+  FiActivity,
+} from "react-icons/fi";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/hooks/useAuth";
@@ -19,6 +28,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { motion } from "framer-motion";
 
 // Define cards outside the component to avoid recreation on each render
 const actionCards = [
@@ -39,6 +49,26 @@ const actionCards = [
     bgColor: "bg-secondary/10",
   },
 ];
+
+// Animation variants
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { y: 20, opacity: 0 },
+  show: {
+    y: 0,
+    opacity: 1,
+    transition: { type: "spring", stiffness: 300, damping: 24 },
+  },
+};
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -129,82 +159,130 @@ export default function DashboardPage() {
       day: "2-digit",
       hour: "2-digit",
       minute: "2-digit",
-      second: "2-digit",
       hour12: false,
     });
   };
 
   return (
     <AppLayout>
-      <div className="py-6">
+      <div className="py-8">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-8">
-          <div className="flex items-center space-x-2">
-            <h1 className="text-2xl font-semibold">Dashboard</h1>
-            <div className="h-8 w-1 bg-primary rounded-full"></div>
-            <p className="text-sm text-muted-foreground">
-              Welcome back,{" "}
-              <span className="font-medium">{user?.username || "Guest"}</span>
-            </p>
-          </div>
-        </div>
-
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-8">
-          <div className="py-4">
-            {/* Quick Actions Grid */}
-            <h2 className="text-lg font-medium text-primary mb-4">
-              Quick Actions
-            </h2>
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-2">
-              {actionCards.map((card) => (
-                <Card
-                  key={card.name}
-                  className="overflow-hidden shadow-md border-none"
-                >
-                  <CardContent className="pt-6">
-                    <div className="flex items-center">
-                      <div
-                        className={`flex-shrink-0 rounded-md p-3 ${card.bgColor}`}
-                      >
-                        <card.icon
-                          className={`h-6 w-6 ${card.color}`}
-                          aria-hidden="true"
-                        />
-                      </div>
-                      <div className="ml-5">
-                        <h3 className="text-lg font-medium">{card.name}</h3>
-                        <p className="mt-1 text-sm text-muted-foreground">
-                          {card.description}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                  <CardFooter className="pt-0">
-                    <Button
-                      onClick={() => router.push(card.href)}
-                      className="w-full"
-                      variant={
-                        card.name === "Make a Payment" ? "default" : "secondary"
-                      }
-                    >
-                      Go to {card.name}
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
+          <motion.div
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="flex flex-col md:flex-row md:items-center md:justify-between mb-8"
+          >
+            <div className="flex items-center space-x-3">
+              <div className="h-12 w-1.5 bg-gradient-to-b from-primary to-primary/40 rounded-full"></div>
+              <div>
+                <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+                <p className="text-muted-foreground mt-1">
+                  Welcome back,{" "}
+                  <span className="font-medium text-primary">
+                    {user?.username || "Guest"}
+                  </span>
+                </p>
+              </div>
             </div>
 
-            {/* Recent Transactions */}
-            <h2 className="text-lg font-medium text-primary mt-8 mb-4">
-              Recent Transactions
+            <Button
+              onClick={() => router.push("/payment/initiate")}
+              className="mt-4 md:mt-0 group"
+              size="sm"
+            >
+              New Payment
+              <FiArrowUpRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
+            </Button>
+          </motion.div>
+
+          {/* Quick Actions Grid */}
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="show"
+            className="mb-8"
+          >
+            <h2 className="text-xl font-semibold mb-4 flex items-center">
+              <FiTarget className="mr-2 h-5 w-5 text-primary" />
+              Quick Actions
             </h2>
-            <Card className="shadow-md border-none">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+              {actionCards.map((card, idx) => (
+                <motion.div key={card.name} variants={itemVariants}>
+                  <Card className="overflow-hidden backdrop-blur-sm bg-gradient-to-br from-background/80 to-background border border-muted/20 shadow-sm hover:shadow-md transition-all duration-300 h-full">
+                    <CardContent className="pt-6">
+                      <div className="flex items-center">
+                        <div
+                          className={`flex-shrink-0 rounded-xl p-3 ${card.bgColor}`}
+                        >
+                          <card.icon
+                            className={`h-6 w-6 ${card.color}`}
+                            aria-hidden="true"
+                          />
+                        </div>
+                        <div className="ml-5">
+                          <h3 className="text-lg font-semibold">{card.name}</h3>
+                          <p className="mt-1 text-sm text-muted-foreground">
+                            {card.description}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                    <CardFooter className="pt-0">
+                      <Button
+                        onClick={() => router.push(card.href)}
+                        className="w-full group"
+                        variant={
+                          card.name === "Make a Payment"
+                            ? "default"
+                            : "secondary"
+                        }
+                      >
+                        {card.name}
+                        <FiArrowUpRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Recent Transactions */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold flex items-center">
+                <FiDollarSign className="mr-2 h-5 w-5 text-primary" />
+                Recent Transactions
+              </h2>
+              {displayTransactions.length > 0 && (
+                <Link
+                  href="/payment/status"
+                  className="text-primary text-sm font-medium hover:underline flex items-center"
+                >
+                  View all
+                  <FiArrowUpRight className="ml-1 h-4 w-4" />
+                </Link>
+              )}
+            </div>
+            <Card className="shadow-sm border-muted/20 backdrop-blur-sm overflow-hidden">
               {displayTransactions.length > 0 ? (
-                <ul className="divide-y">
-                  {displayTransactions.map((transaction) => (
-                    <li key={transaction.transactionReference}>
-                      <div className="p-4 hover:bg-accent/50 transition-colors">
+                <ul className="divide-y divide-muted/10">
+                  {displayTransactions.map((transaction, idx) => (
+                    <motion.li
+                      key={transaction.transactionReference}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 * idx }}
+                    >
+                      <div className="p-4 hover:bg-accent/30 transition-colors">
                         <div className="flex items-center justify-between">
-                          <div className="truncate text-sm font-medium text-primary">
+                          <div className="truncate text-sm font-medium">
                             {transaction.transactionReference}
                           </div>
                           <div className="ml-2 flex flex-shrink-0">
@@ -212,6 +290,7 @@ export default function DashboardPage() {
                               variant={
                                 getStatusBadgeVariant(transaction.status) as any
                               }
+                              className="rounded-full px-3"
                             >
                               {transaction.status}
                             </Badge>
@@ -220,42 +299,54 @@ export default function DashboardPage() {
                         <div className="mt-2 flex justify-between">
                           <div className="flex">
                             <div className="flex items-center text-sm text-muted-foreground">
-                              <FiClock className="mr-1.5 h-5 w-5 flex-shrink-0 text-muted-foreground" />
+                              <FiClock className="mr-1.5 h-4 w-4 flex-shrink-0 text-muted-foreground" />
                               <p>{formatDate(transaction.timestamp)}</p>
                             </div>
                           </div>
-                          <div className="flex items-center text-sm">
-                            <Link
-                              href={`/payment/status?ref=${transaction.transactionReference}`}
-                              className="text-primary underline-offset-4 hover:underline text-sm font-medium"
-                            >
-                              View details
-                            </Link>
-                          </div>
+                          <Link
+                            href={`/payment/status?ref=${transaction.transactionReference}`}
+                            className="text-primary flex items-center text-sm font-medium hover:underline"
+                          >
+                            View details
+                            <FiArrowUpRight className="ml-1 h-3 w-3" />
+                          </Link>
                         </div>
                       </div>
-                    </li>
+                    </motion.li>
                   ))}
                 </ul>
               ) : (
-                <CardContent className="py-12 text-center">
-                  <FiDollarSign className="mx-auto h-12 w-12 text-muted-foreground" />
-                  <h3 className="mt-2 text-sm font-medium">No transactions</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    You haven't made any transactions yet.
-                  </p>
-                  <div className="mt-6">
-                    <Button
-                      onClick={() => router.push("/payment/initiate")}
-                      size="sm"
-                    >
-                      Make your first payment
-                    </Button>
-                  </div>
+                <CardContent className="py-16 text-center">
+                  <motion.div
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 24 }}
+                  >
+                    <div className="bg-primary/5 p-4 rounded-full w-16 h-16 flex items-center justify-center mx-auto">
+                      <FiDollarSign className="h-8 w-8 text-primary" />
+                    </div>
+                    <h3 className="mt-4 text-lg font-medium">
+                      No transactions yet
+                    </h3>
+                    <p className="mt-2 text-sm text-muted-foreground max-w-sm mx-auto">
+                      When you make payments, they'll appear here for easy
+                      tracking and management.
+                    </p>
+                    <div className="mt-6">
+                      <Button
+                        onClick={() => router.push("/payment/initiate")}
+                        size="lg"
+                        className="group"
+                      >
+                        Make your first payment
+                        <FiArrowUpRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
+                      </Button>
+                    </div>
+                  </motion.div>
                 </CardContent>
               )}
             </Card>
-          </div>
+          </motion.div>
         </div>
       </div>
     </AppLayout>
