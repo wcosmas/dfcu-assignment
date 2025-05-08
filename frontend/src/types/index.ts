@@ -51,4 +51,23 @@ export interface ApiError {
     message: string;
     status: number;
     errors?: Record<string, string[]>;
+}
+
+// User profile types
+export interface UserProfile {
+    id: string;
+    username: string;
+    email: string;
+    fullName: string;
+    accountNumber: string;
+    role: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface UpdateProfileRequest {
+    fullName?: string;
+    email?: string;
+    currentPassword?: string;
+    newPassword?: string;
 } 

@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { authApi } from '@/api/auth';
-import { AuthResponse, LoginRequest, User } from '@/types';
+import { userApi } from '@/api/user';
+import { AuthResponse, LoginRequest, User, UpdateProfileRequest, UserProfile } from '@/types';
 import Cookies from 'js-cookie';
 
 export function useAuth() {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
+    const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
     const router = useRouter();
 
     // Check if user is logged in on mount
@@ -24,6 +26,14 @@ export function useAuth() {
                             userId,
                             username,
                         });
+
+                        // Fetch the full user profile
+                        try {
+                            const profile = await userApi.getProfile();
+                            setUserProfile(profile);
+                        } catch (profileErr) {
+                            console.error("Failed to load user profile:", profileErr);
+                        }
                     }
                 }
             } catch (err) {
@@ -56,6 +66,14 @@ export function useAuth() {
                 sameSite: 'lax'
             });
 
+            // Fetch user profile after login
+            try {
+                const profile = await userApi.getProfile();
+                setUserProfile(profile);
+            } catch (profileErr) {
+                console.error("Failed to load user profile after login:", profileErr);
+            }
+
             return response;
         } catch (err: any) {
             const message = err.response?.data?.message || 'Authentication failed';
@@ -65,6 +83,34 @@ export function useAuth() {
             setLoading(false);
         }
     }, []);
+
+    // Update profile function
+    const updateProfile = useCallback(async (data: UpdateProfileRequest) => {
+        setLoading(true);
+        setError(null);
+
+        try {
+            const updatedProfile = await userApi.updateProfile(data);
+            setUserProfile(updatedProfile);
+
+            // Update user basic info if username has changed
+            if (user && updatedProfile.username !== user.username) {
+                setUser({
+                    ...user,
+                    username: updatedProfile.username
+                });
+                localStorage.setItem('username', updatedProfile.username);
+            }
+
+            return updatedProfile;
+        } catch (err: any) {
+            const message = err.response?.data?.message || 'Profile update failed';
+            setError(message);
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    }, [user]);
 
     // Logout function
     const logout = useCallback(async () => {
@@ -78,6 +124,7 @@ export function useAuth() {
 
             // Clear user state regardless of API response
             setUser(null);
+            setUserProfile(null);
 
             // Remove the access token cookie
             Cookies.remove('accessToken', { path: '/' });
@@ -91,11 +138,12 @@ export function useAuth() {
     }, [router]);
 
     return {
-        user,
+        user: userProfile || user,
         loading,
         error,
         isAuthenticated: !!user,
         login,
         logout,
+        updateProfile,
     };
 } 
