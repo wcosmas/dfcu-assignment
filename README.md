@@ -251,9 +251,11 @@ Below are screenshots showcasing the application's frontend web interface and fu
 
 ![Login Page](/screenshots/Screenshot%202025-05-08%20at%2019.16.35.png)
 
+![Dashboard Page](/screenshots/Screenshot%202025-05-08%20at%2019.14.46.png)
+
 ![Dashboard Page](/screenshots/Screenshot%202025-05-08%20at%2019.15.39.png)
 
-![Make Payment Page](/screenshots/Screenshot%202025-05-08%20at%2019.14.46.png)
+![Transaction Flow](/screenshots/Screenshot%202025-05-08%20at%2019.14.57.png)
 
 ![Check Status Page](/screenshots/Screenshot%202025-05-08%20at%2019.15.06.png)
 
@@ -264,8 +266,6 @@ Below are screenshots showcasing the application's frontend web interface and fu
 ![User Profile](/screenshots/Screenshot%202025-05-08%20at%2019.15.58.png)
 
 ![Change Password](/screenshots/Screenshot%202025-05-08%20at%2019.16.14.png)
-
-![Transaction Flow](/screenshots/Screenshot%202025-05-08%20at%2019.14.57.png)
 
 ## Testing
 
