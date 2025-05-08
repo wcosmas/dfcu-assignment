@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   FiRefreshCw,
   FiClock,
@@ -14,8 +14,10 @@ import {
   FiClock as FiClockCircle,
 } from "react-icons/fi";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { usePayment } from "@/hooks/usePayment";
 import { PaymentStatus } from "@/types";
+import { paymentApi } from "@/api/payment";
+import { useQuery } from "@tanstack/react-query";
+import { QUERY_KEYS } from "@/lib/query-keys";
 import {
   Card,
   CardContent,
@@ -73,31 +75,34 @@ const itemVariants = {
 };
 
 export default function TransactionsPage() {
-  const { transactions, loading, getTransactionHistory, error } = usePayment();
   const [filter, setFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedTransaction, setSelectedTransaction] =
     useState<PaymentStatus | null>(null);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
 
-  // Fetch transactions on component mount
-  useEffect(() => {
-    handleRefreshTransactions();
-  }, []);
+  // Use React Query to fetch transaction data
+  const {
+    data: transactions = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+    isRefetching,
+  } = useQuery({
+    queryKey: [QUERY_KEYS.PAYMENT.HISTORY],
+    queryFn: paymentApi.getTransactionHistory,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
 
   // Handle refreshing transactions with toast feedback
   const handleRefreshTransactions = async () => {
-    setIsRefreshing(true);
-
     try {
-      await getTransactionHistory();
+      await refetch();
     } catch (err) {
       toast.error("Refresh Failed", {
         description: "Could not refresh transactions. Please try again.",
       });
-    } finally {
-      setIsRefreshing(false);
     }
   };
 
@@ -237,12 +242,12 @@ export default function TransactionsPage() {
           <Button
             onClick={handleRefreshTransactions}
             className="mt-4 md:mt-0 flex items-center"
-            disabled={loading || isRefreshing}
+            disabled={isLoading || isRefetching}
             variant="outline"
             size="sm"
           >
             <FiRefreshCw
-              className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
+              className={`mr-2 h-4 w-4 ${isRefetching ? "animate-spin" : ""}`}
             />
             Refresh
           </Button>
@@ -273,7 +278,7 @@ export default function TransactionsPage() {
                         <SelectValue placeholder="Filter by status" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">All Transactions</SelectItem>
+                        <SelectItem value="all">All Payments</SelectItem>
                         <SelectItem value="SUCCESSFUL">Successful</SelectItem>
                         <SelectItem value="PENDING">Pending</SelectItem>
                         <SelectItem value="FAILED">Failed</SelectItem>
@@ -294,19 +299,35 @@ export default function TransactionsPage() {
                   </div>
                 </div>
 
-                {loading ? (
+                {isLoading ? (
                   <div className="flex justify-center items-center py-12">
                     <div className="animate-spin mr-2">
                       <FiRefreshCw className="h-6 w-6 text-primary" />
                     </div>
-                    <span>Loading transactions...</span>
+                    <span>Loading payments...</span>
+                  </div>
+                ) : isError ? (
+                  <div className="text-center py-12">
+                    <FiAlertCircle className="mx-auto h-12 w-12 text-destructive mb-4" />
+                    <h3 className="text-lg font-medium">
+                      Error loading payments
+                    </h3>
+                    <p className="text-muted-foreground mt-1">
+                      {error instanceof Error
+                        ? error.message
+                        : "An unexpected error occurred"}
+                    </p>
+                    <Button
+                      onClick={handleRefreshTransactions}
+                      className="mt-4"
+                    >
+                      Try Again
+                    </Button>
                   </div>
                 ) : filteredTransactions.length === 0 ? (
                   <div className="text-center py-12">
                     <FiFilter className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                    <h3 className="text-lg font-medium">
-                      No transactions found
-                    </h3>
+                    <h3 className="text-lg font-medium">No payments found</h3>
                     <p className="text-muted-foreground mt-1">
                       Try changing your filters or search query
                     </p>
