@@ -1,0 +1,86 @@
+// Prisma schema for dfcu Bank Payment Gateway
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+// User model
+model User {
+    id            String   @id @default(uuid())
+    username      String   @unique
+    email         String   @unique
+    password      String
+    fullName      String
+    accountNumber String   @unique
+    role          UserRole @default(USER)
+
+    refreshTokens    RefreshToken[]
+    sentPayments     Transaction[]  @relation("PayerUser")
+    receivedPayments Transaction[]  @relation("PayeeUser")
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@map("users")
+}
+
+// Enum for user roles
+enum UserRole {
+    USER
+    ADMIN
+}
+
+// RefreshToken model
+model RefreshToken {
+    id        String   @id @default(uuid())
+    token     String   @unique
+    expires   DateTime
+    isRevoked Boolean  @default(false)
+
+    userId String
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@map("refresh_tokens")
+}
+
+// Transaction model
+model Transaction {
+    id                   String            @id @default(uuid())
+    transactionReference String            @unique
+    amount               Decimal           @db.Decimal(10, 2)
+    currency             String
+    payerReference       String?
+    status               TransactionStatus
+    statusCode           Int
+    message              String
+    payerId              String
+    payeeId              String
+    payerAccountNumber   String
+    payeeAccountNumber   String
+
+    payer User @relation("PayerUser", fields: [payerId], references: [id])
+    payee User @relation("PayeeUser", fields: [payeeId], references: [id])
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([payerId])
+    @@index([payeeId])
+    @@index([transactionReference])
+    @@map("transactions")
+}
+
+// Enum for transaction status
+enum TransactionStatus {
+    PENDING
+    SUCCESSFUL
+    FAILED
+}
