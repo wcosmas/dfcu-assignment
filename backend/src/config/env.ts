@@ -5,7 +5,7 @@ config({ path: path.resolve(__dirname, '../../.env') });
 
 export const env = {
     // Server
-    port: process.env.PORT || 3000,
+    port: process.env.PORT || 8000,
     nodeEnv: process.env.NODE_ENV || 'development',
 
     // Database

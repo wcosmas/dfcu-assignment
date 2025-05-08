@@ -18,6 +18,11 @@ A secure, reliable payment processing system built with Node.js, Express, Next.j
 - [Testing](#testing)
 - [License](#license)
 - [Docker Deployment](#docker-deployment)
+  - [Prerequisites](#prerequisites-1)
+  - [Production Deployment Guide](#production-deployment-guide)
+  - [Production Best Practices](#production-best-practices)
+  - [Troubleshooting](#troubleshooting)
+  - [Deployment with Reverse Proxy](#deployment-with-reverse-proxy)
 
 ## Project Overview
 
@@ -314,63 +319,223 @@ This project is licensed under the ISC License.
 
 ## Docker Deployment
 
+The application is containerized and can be easily deployed using Docker Compose.
+
 ### Prerequisites
 
-- Docker
-- Docker Compose
+- Docker (version 20.10+)
+- Docker Compose (version 2.0+)
 
-### Setup
+### Production Deployment Guide
 
-1. Clone this repository
-2. Create a `.env` file in the root directory based on the `.env.example` template:
+#### 1. Prepare Environment
+
+1. Clone the repository
+
    ```bash
-   cp .env.example .env
+   git clone <repository-url>
+   cd dfcu-payment-gateway
    ```
-3. Modify the `.env` file with your environment-specific values
 
-### Running with Docker Compose
+2. Create a `.env` file in the root directory with the following variables:
 
-To start all services:
+   ```bash
+   # PostgreSQL Configuration
+   POSTGRES_USER=postgres
+   POSTGRES_PASSWORD=secure_password_here
+   POSTGRES_DB=dfcu_payment_gateway
+
+   # JWT Configuration
+   JWT_SECRET=your_production_jwt_secret_key
+   JWT_EXPIRES_IN=1d
+
+   # Backend Configuration
+   DATABASE_URL=postgresql://postgres:secure_password_here@postgres:5432/dfcu_payment_gateway
+   JWT_ACCESS_SECRET=your_access_secret_key
+   JWT_REFRESH_SECRET=your_refresh_secret_key
+   JWT_ACCESS_EXPIRES_IN=15m
+   JWT_REFRESH_EXPIRES_IN=7d
+
+   # Frontend Configuration
+   NEXT_PUBLIC_API_URL=http://your-domain.com/api  # Update with your actual domain
+   ```
+
+   **Important**: Replace placeholders with secure credentials for production deployments.
+
+#### 2. Configure Docker Compose for Production
+
+The included `docker-compose.yml` is already configured for production, but you may need to adjust:
+
+- Port mappings if you're using a reverse proxy
+- Volume mounts for persistent data
+- Environment-specific variables
+
+#### 3. Build and Start Services
+
+1. Build and start all containers in detached mode
+
+   ```bash
+   docker-compose up -d --build
+   ```
+
+2. Verify all services are running:
+   ```bash
+   docker-compose ps
+   ```
+
+#### 4. Initialize the Database
+
+1. Run database migrations:
+
+   ```bash
+   docker-compose exec backend npx prisma migrate deploy
+   ```
+
+2. (Optional) Seed the database with initial data:
+   ```bash
+   docker-compose exec backend npm run seed
+   ```
+
+#### 5. Access the Application
+
+- Frontend: http://your-domain.com (or http://localhost:3000 for local deployment)
+- Backend API: http://your-domain.com/api (or http://localhost:8000/api for local deployment)
+- API Documentation: http://your-domain.com/api-docs (or http://localhost:8000/api-docs for local deployment)
+
+### Production Best Practices
+
+#### Security Considerations
+
+1. **Use HTTPS**: Configure SSL/TLS for production using a reverse proxy like Nginx or Traefik
+
+2. **Secure Environment Variables**: Never commit `.env` files to version control
+
+3. **Regular Updates**: Keep Docker images updated with security patches
+
+#### Monitoring and Maintenance
+
+1. **Container Health Checks**:
+
+   ```bash
+   # Check container status
+   docker-compose ps
+
+   # View container logs
+   docker-compose logs -f
+   ```
+
+2. **Database Backups**:
+
+   ```bash
+   # Create a database backup
+   docker-compose exec postgres pg_dump -U postgres dfcu_payment_gateway > backup_$(date +%Y%m%d).sql
+
+   # Restore from backup
+   cat backup_file.sql | docker exec -i dfcu-postgres psql -U postgres -d dfcu_payment_gateway
+   ```
+
+#### Scaling and Updates
+
+1. **Zero Downtime Updates**:
+
+   ```bash
+   # Pull latest images
+   docker-compose pull
+
+   # Restart services one by one
+   docker-compose up -d --no-deps --build service-name
+   ```
+
+2. **Resource Allocation**:
+   For high-traffic environments, adjust container resources in the `docker-compose.yml` file:
+   ```yaml
+   services:
+     backend:
+       deploy:
+         resources:
+           limits:
+             cpus: "0.5"
+             memory: 512M
+   ```
+
+### Troubleshooting
+
+#### Common Issues
+
+1. **Database Connection Issues**:
+
+   - Verify PostgreSQL container is running: `docker-compose ps postgres`
+   - Check DATABASE_URL in the backend environment
+   - Ensure PostgreSQL is accepting connections: `docker-compose exec postgres pg_isready`
+
+2. **Backend Not Starting**:
+
+   - Check logs: `docker-compose logs backend`
+   - Verify Prisma migrations: `docker-compose exec backend npx prisma migrate status`
+
+3. **Frontend Not Connecting to Backend**:
+   - Verify NEXT_PUBLIC_API_URL is correct
+   - Check backend health: `curl -I http://localhost:8000/api/health`
+
+#### Resetting the Environment
+
+If you need to start fresh:
 
 ```bash
-docker-compose up -d
-```
-
-This will start:
-
-- PostgreSQL database
-- Backend API service (http://localhost:3001)
-- Frontend web application (http://localhost:3000)
-
-### Stopping the Services
-
-```bash
+# Stop all containers
 docker-compose down
-```
 
-### Viewing Logs
+# Remove volumes (CAUTION: This deletes all data)
+docker-compose down -v
 
-```bash
-# All services
-docker-compose logs -f
-
-# Specific service
-docker-compose logs -f backend
-docker-compose logs -f frontend
-```
-
-### Rebuilding Services
-
-After making changes to the code:
-
-```bash
+# Rebuild and restart
 docker-compose up -d --build
 ```
 
-### Database Management
+### Deployment with Reverse Proxy
 
-To access the PostgreSQL database:
+For production deployments, it's recommended to use a reverse proxy like Nginx:
 
-```bash
-docker exec -it dfcu-postgres psql -U postgres -d dfcu_payment_gateway
-```
+1. Create an nginx configuration file `nginx.conf`:
+
+   ```nginx
+   server {
+       listen 80;
+       server_name your-domain.com;
+
+       location / {
+           proxy_pass http://frontend:3000;
+           proxy_set_header Host $host;
+           proxy_set_header X-Real-IP $remote_addr;
+       }
+
+       location /api {
+           proxy_pass http://backend:8000/api;
+           proxy_set_header Host $host;
+           proxy_set_header X-Real-IP $remote_addr;
+       }
+
+       location /api-docs {
+           proxy_pass http://backend:8000/api-docs;
+           proxy_set_header Host $host;
+           proxy_set_header X-Real-IP $remote_addr;
+       }
+   }
+   ```
+
+2. Add Nginx service to `docker-compose.yml`:
+   ```yaml
+   nginx:
+     image: nginx:alpine
+     ports:
+       - "80:80"
+       - "443:443"
+     volumes:
+       - ./nginx.conf:/etc/nginx/conf.d/default.conf
+       - ./ssl:/etc/nginx/ssl
+     depends_on:
+       - frontend
+       - backend
+     networks:
+       - dfcu-network
+   ```

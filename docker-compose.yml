@@ -34,7 +34,7 @@ services:
         condition: service_healthy
     environment:
       - NODE_ENV=production
-      - PORT=3001
+      - PORT=8000
       - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-dfcu_payment_gateway}
       - JWT_SECRET=${JWT_SECRET:-your_jwt_secret_key}
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-1d}
