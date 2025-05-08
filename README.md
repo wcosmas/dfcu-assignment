@@ -205,6 +205,32 @@ npm run build
 npm start
 ```
 
+#### Database Seeding
+
+The backend includes a seeding script that populates the database with sample data for testing and development purposes:
+
+```bash
+# Run the seeding script
+npm run seed
+```
+
+**What the seed script creates:**
+
+1. **Users**:
+
+   - Admin user: `admin_user` (password: `Admin@123`)
+   - Regular users:
+     - `john_doe` (password: `User@123`)
+     - `jane_smith` (password: `User@123`)
+     - `alice_cooper` (password: `User@123`)
+
+2. **Transactions**:
+   - Successful transaction (from John to Jane)
+   - Pending transaction (from Jane to Alice)
+   - Failed transaction (from Alice to John)
+
+**Note**: The seeding script will clear existing data in the users, transactions, and refresh tokens tables before inserting sample data. Do not run this script in production environments.
+
 #### Frontend
 
 ```bash
