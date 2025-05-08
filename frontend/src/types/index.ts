@@ -44,6 +44,10 @@ export interface PaymentStatus {
     statusCode: 100 | 200 | 400;
     message: string;
     timestamp: string;
+    payee?: string;
+    payeeAccountNumber?: string;
+    amount?: number;
+    currency?: string;
 }
 
 // API error type

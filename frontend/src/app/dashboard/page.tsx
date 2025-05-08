@@ -132,17 +132,11 @@ export default function DashboardPage() {
 
   // Handle refreshing transactions with toast feedback
   const handleRefreshTransactions = async () => {
-    const refreshToast = toast.loading("Refreshing transactions...");
     try {
       await refetchTransactions();
-      toast.success("Transactions Updated", {
-        description: "Your transaction history has been refreshed.",
-        id: refreshToast,
-      });
     } catch (error) {
       toast.error("Refresh Failed", {
         description: "Could not refresh transactions. Please try again.",
-        id: refreshToast,
       });
     }
   };

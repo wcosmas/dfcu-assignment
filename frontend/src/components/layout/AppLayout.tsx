@@ -10,6 +10,7 @@ import {
   FiLogOut,
   FiMenu,
   FiX,
+  FiList,
 } from "react-icons/fi";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/Button";
@@ -31,6 +32,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     { name: "Dashboard", href: "/dashboard", icon: FiHome },
     { name: "Make Payment", href: "/payment/initiate", icon: FiCreditCard },
     { name: "Check Status", href: "/payment/status", icon: FiSearch },
+    { name: "Transactions", href: "/transactions", icon: FiList },
     { name: "Profile", href: "/profile", icon: FiUser },
   ];
 

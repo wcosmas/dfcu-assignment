@@ -16,11 +16,11 @@ export default function PaymentInitiatePage() {
               <span>Secure Transaction</span>
             </div>
 
-            <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-4 bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70">
+            <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-4 bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70">
               Make a Payment
             </h1>
 
-            <p className="text-lg text-slate-600 dark:text-slate-300 leading-relaxed">
+            <p className="text-md text-slate-600 dark:text-slate-300 leading-relaxed">
               Transfer funds between accounts quickly and securely with our
               state-of-the-art payment system. All transactions are encrypted
               and processed in real-time for your peace of mind.
