@@ -111,4 +111,54 @@ export const getPaymentStatus = async (
     } catch (error) {
         next(error);
     }
+};
+
+/**
+ * Get transaction history for the current user
+ */
+export const getTransactionHistory = async (
+    req: RequestWithUser,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        if (!req.user) {
+            throw new BadRequestException('User not authenticated');
+        }
+
+        const userId = req.user.id;
+
+        // Fetch transactions where the user is either payer or payee
+        const transactions = await prisma.transaction.findMany({
+            where: {
+                OR: [
+                    { payerId: userId },
+                    { payeeId: userId }
+                ]
+            },
+            orderBy: {
+                createdAt: 'desc'
+            },
+            take: 20 // Limit to the most recent 20 transactions
+        });
+
+        // Format the response
+        const formattedTransactions = transactions.map(transaction => ({
+            transactionReference: transaction.transactionReference,
+            amount: transaction.amount,
+            currency: transaction.currency,
+            status: transaction.status,
+            statusCode: transaction.statusCode,
+            message: transaction.message,
+            timestamp: transaction.createdAt.toISOString(),
+            payerReference: transaction.payerReference,
+            payerAccountNumber: transaction.payerAccountNumber,
+            payeeAccountNumber: transaction.payeeAccountNumber,
+            type: transaction.payerId === userId ? 'SENT' : 'RECEIVED'
+        }));
+
+        res.status(200).json(formattedTransactions);
+    } catch (error) {
+        next(error);
+    }
 }; 
