@@ -19,8 +19,8 @@ export function useAuth() {
     // Check authentication status on mount
     useEffect(() => {
         if (typeof window !== 'undefined') {
-            const userId = localStorage.getItem('userId');
-            const username = localStorage.getItem('username');
+            const userId = Cookies.get('userId');
+            const username = Cookies.get('username');
 
             if (userId && username) {
                 setUser({
@@ -44,6 +44,16 @@ export function useAuth() {
             enabled: !!user, // Only run query if user is authenticated
             retry: false,
             refetchOnWindowFocus: false,
+            onSuccess: (data) => {
+                // Store email in cookies when profile is fetched
+                if (data?.email) {
+                    Cookies.set('userEmail', data.email, {
+                        path: '/',
+                        sameSite: 'lax' as const,
+                        secure: process.env.NODE_ENV === 'production'
+                    });
+                }
+            }
         }
     );
 
@@ -61,12 +71,18 @@ export function useAuth() {
                     username: response.username,
                 });
 
-                // Set cookie for middleware authentication
-                Cookies.set('accessToken', response.accessToken, {
-                    expires: 1, // 1 day
+                // Cookie options
+                const cookieOptions = {
                     path: '/',
-                    sameSite: 'lax'
-                });
+                    sameSite: 'lax' as const,
+                    secure: process.env.NODE_ENV === 'production',
+                };
+
+                // Set cookies directly here
+                Cookies.set('accessToken', response.accessToken, cookieOptions);
+                Cookies.set('refreshToken', response.refreshToken, cookieOptions);
+                Cookies.set('userId', response.userId, cookieOptions);
+                Cookies.set('username', response.username, cookieOptions);
 
                 // Trigger profile query after login
                 refetchProfile();
@@ -89,7 +105,11 @@ export function useAuth() {
                         ...user,
                         username: updatedProfile.username
                     });
-                    localStorage.setItem('username', updatedProfile.username);
+                    Cookies.set('username', updatedProfile.username, {
+                        path: '/',
+                        sameSite: 'lax' as const,
+                        secure: process.env.NODE_ENV === 'production'
+                    });
                 }
 
                 // Update the profile in the cache
@@ -99,6 +119,24 @@ export function useAuth() {
         [QUERY_KEYS.USER.PROFILE] // Invalidate profile query on success
     );
 
+    // Common logout cleanup function
+    const clearAuthData = () => {
+        // Clear user state
+        setUser(null);
+
+        // Clear query cache
+        queryClient.clear();
+
+        // Remove cookies
+        Cookies.remove('accessToken', { path: '/' });
+        Cookies.remove('refreshToken', { path: '/' });
+        Cookies.remove('userId', { path: '/' });
+        Cookies.remove('username', { path: '/' });
+        Cookies.remove('userEmail', { path: '/' });
+
+        router.push('/auth/login');
+    };
+
     // Logout mutation
     const {
         mutate: logoutMutation,
@@ -107,23 +145,11 @@ export function useAuth() {
         (refreshToken) => authApi.logout(refreshToken),
         {
             onSuccess: () => {
-                // Clear user state
-                setUser(null);
-
-                // Clear query cache
-                queryClient.clear();
-
-                // Remove the access token cookie
-                Cookies.remove('accessToken', { path: '/' });
-
-                router.push('/auth/login');
+                clearAuthData();
             },
             onError: () => {
                 // Even if the API call fails, we should clear local state
-                setUser(null);
-                queryClient.clear();
-                Cookies.remove('accessToken', { path: '/' });
-                router.push('/auth/login');
+                clearAuthData();
             }
         }
     );
@@ -158,17 +184,14 @@ export function useAuth() {
     }, [updateProfileMutation]);
 
     const logout = useCallback(async () => {
-        const refreshToken = localStorage.getItem('refreshToken');
+        const refreshToken = Cookies.get('refreshToken');
         if (refreshToken) {
             logoutMutation(refreshToken);
         } else {
             // If no refresh token, just clear local state
-            setUser(null);
-            queryClient.clear();
-            Cookies.remove('accessToken', { path: '/' });
-            router.push('/auth/login');
+            clearAuthData();
         }
-    }, [logoutMutation, queryClient, router]);
+    }, [logoutMutation, clearAuthData]);
 
     return {
         user: userProfile || user,

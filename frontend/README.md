@@ -83,10 +83,11 @@ Adjust the API URL based on your backend setup.
 
 The authentication system uses JWT tokens with:
 
-- Short-lived access tokens (stored in memory)
-- Refresh tokens (stored in localStorage)
+- Short-lived access tokens (stored in HTTP-only cookies)
+- Refresh tokens (stored in cookies with proper security settings)
 - Automatic token refresh
 - Protected routes with middleware
+- Secure cookie management for enhanced security
 
 ## Data Fetching with React Query
 

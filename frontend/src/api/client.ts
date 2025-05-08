@@ -1,8 +1,16 @@
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios';
 import { AuthResponse } from '@/types';
+import Cookies from 'js-cookie';
 
 // API base URL - we'll use environment variables in production
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+
+// Cookie configuration
+const COOKIE_OPTIONS = {
+    path: '/',
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict' as const
+};
 
 class ApiClient {
     private client: AxiosInstance;
@@ -95,12 +103,12 @@ class ApiClient {
     // Helper methods for token management
     private getAccessToken(): string | null {
         if (typeof window === 'undefined') return null;
-        return localStorage.getItem('accessToken');
+        return Cookies.get('accessToken') || null;
     }
 
     private getRefreshToken(): string | null {
         if (typeof window === 'undefined') return null;
-        return localStorage.getItem('refreshToken');
+        return Cookies.get('refreshToken') || null;
     }
 
     private async refreshAccessToken(refreshToken: string): Promise<AuthResponse> {
@@ -110,18 +118,20 @@ class ApiClient {
 
     public setTokens(authResponse: AuthResponse): void {
         if (typeof window === 'undefined') return;
-        localStorage.setItem('accessToken', authResponse.accessToken);
-        localStorage.setItem('refreshToken', authResponse.refreshToken);
-        localStorage.setItem('userId', authResponse.userId);
-        localStorage.setItem('username', authResponse.username);
+
+        Cookies.set('accessToken', authResponse.accessToken, COOKIE_OPTIONS);
+        Cookies.set('refreshToken', authResponse.refreshToken, COOKIE_OPTIONS);
+        Cookies.set('userId', authResponse.userId, COOKIE_OPTIONS);
+        Cookies.set('username', authResponse.username, COOKIE_OPTIONS);
     }
 
     public clearTokens(): void {
         if (typeof window === 'undefined') return;
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('userId');
-        localStorage.removeItem('username');
+
+        Cookies.remove('accessToken', { path: '/' });
+        Cookies.remove('refreshToken', { path: '/' });
+        Cookies.remove('userId', { path: '/' });
+        Cookies.remove('username', { path: '/' });
     }
 
     // Expose request methods

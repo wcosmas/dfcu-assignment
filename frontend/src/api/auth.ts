@@ -1,5 +1,6 @@
 import apiClient from './client';
 import { AuthResponse, LoginRequest } from '@/types';
+import Cookies from 'js-cookie';
 
 export const authApi = {
     /**
@@ -34,6 +35,6 @@ export const authApi = {
      */
     isAuthenticated: (): boolean => {
         if (typeof window === 'undefined') return false;
-        return !!localStorage.getItem('accessToken');
+        return !!Cookies.get('accessToken');
     },
 }; 

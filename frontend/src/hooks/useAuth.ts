@@ -17,9 +17,9 @@ export function useAuth() {
         const checkAuth = async () => {
             try {
                 if (typeof window !== 'undefined') {
-                    // Check if we have tokens in localStorage
-                    const userId = localStorage.getItem('userId');
-                    const username = localStorage.getItem('username');
+                    // Check if we have tokens in cookies
+                    const userId = Cookies.get('userId');
+                    const username = Cookies.get('username');
 
                     if (userId && username) {
                         setUser({
@@ -31,6 +31,15 @@ export function useAuth() {
                         try {
                             const profile = await userApi.getProfile();
                             setUserProfile(profile);
+
+                            // Store email in cookie
+                            if (profile.email) {
+                                Cookies.set('userEmail', profile.email, {
+                                    path: '/',
+                                    sameSite: 'lax' as const,
+                                    secure: process.env.NODE_ENV === 'production'
+                                });
+                            }
                         } catch (profileErr) {
                             console.error("Failed to load user profile:", profileErr);
                         }
@@ -59,17 +68,28 @@ export function useAuth() {
                 username: response.username,
             });
 
-            // Set cookie for middleware authentication
-            Cookies.set('accessToken', response.accessToken, {
+            // Set cookies for all user data
+            const cookieOptions = {
                 expires: 1, // 1 day
                 path: '/',
-                sameSite: 'lax'
-            });
+                sameSite: 'lax' as const,
+                secure: process.env.NODE_ENV === 'production'
+            };
+
+            Cookies.set('accessToken', response.accessToken, cookieOptions);
+            Cookies.set('refreshToken', response.refreshToken, cookieOptions);
+            Cookies.set('userId', response.userId, cookieOptions);
+            Cookies.set('username', response.username, cookieOptions);
 
             // Fetch user profile after login
             try {
                 const profile = await userApi.getProfile();
                 setUserProfile(profile);
+
+                // Store email in cookie
+                if (profile.email) {
+                    Cookies.set('userEmail', profile.email, cookieOptions);
+                }
             } catch (profileErr) {
                 console.error("Failed to load user profile after login:", profileErr);
             }
@@ -101,7 +121,20 @@ export function useAuth() {
                     ...user,
                     username: updatedProfile.username
                 });
-                localStorage.setItem('username', updatedProfile.username);
+                Cookies.set('username', updatedProfile.username, {
+                    path: '/',
+                    sameSite: 'lax' as const,
+                    secure: process.env.NODE_ENV === 'production'
+                });
+            }
+
+            // Update email in cookie if provided
+            if (updatedProfile.email) {
+                Cookies.set('userEmail', updatedProfile.email, {
+                    path: '/',
+                    sameSite: 'lax' as const,
+                    secure: process.env.NODE_ENV === 'production'
+                });
             }
 
             return updatedProfile;
@@ -121,7 +154,7 @@ export function useAuth() {
         setLoading(true);
 
         try {
-            const refreshToken = localStorage.getItem('refreshToken');
+            const refreshToken = Cookies.get('refreshToken');
             if (refreshToken) {
                 await authApi.logout(refreshToken);
             }
@@ -130,8 +163,12 @@ export function useAuth() {
             setUser(null);
             setUserProfile(null);
 
-            // Remove the access token cookie
+            // Remove all cookies
             Cookies.remove('accessToken', { path: '/' });
+            Cookies.remove('refreshToken', { path: '/' });
+            Cookies.remove('userId', { path: '/' });
+            Cookies.remove('username', { path: '/' });
+            Cookies.remove('userEmail', { path: '/' });
 
             router.push('/auth/login');
         } catch (err) {

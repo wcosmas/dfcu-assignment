@@ -66,14 +66,7 @@ export function LoginForm() {
     <Card className="w-full max-w-md border-none shadow-lg">
       <CardHeader className="space-y-1 bg-primary text-primary-foreground rounded-t-lg pb-6">
         <div className="flex justify-center mb-4">
-          <Image
-            src="/logo.svg"
-            alt="DFCU Bank"
-            width={200}
-            height={80}
-            className="h-10 w-auto"
-            priority
-          />
+          <img src="/logo.svg" alt="DFCU Bank" className="h-10 w-auto" />
         </div>
         <CardTitle className="text-2xl font-bold text-center">
           Sign in to your account

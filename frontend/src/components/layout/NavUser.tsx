@@ -7,7 +7,8 @@ import {
   MoreVerticalIcon,
   UserCircleIcon,
 } from "lucide-react";
-
+import Cookies from "js-cookie";
+import { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -31,16 +32,38 @@ interface NavUserProps {
 export function NavUser({ user, logout }: NavUserProps) {
   const isMobile = useIsMobile();
   const router = useRouter();
+  const [fallbackUser, setFallbackUser] = useState<User | null>(null);
 
-  // Handle fallback for user data
-  const userName = user?.fullName || user?.username || "Guest";
-  const userEmail = user?.email || "user@example.com";
-  const userInitials = userName
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .substring(0, 2);
+  // Get user from cookies as fallback
+  useEffect(() => {
+    if (!user && typeof window !== "undefined") {
+      const userId = Cookies.get("userId");
+      const username = Cookies.get("username");
+      const email = Cookies.get("userEmail");
+
+      if (userId && username) {
+        setFallbackUser({
+          userId,
+          username,
+          email,
+        });
+      }
+    }
+  }, [user]);
+
+  // Use provided user or fallback to cookie values
+  const activeUser = user || fallbackUser;
+
+  // Handle fallback for display values
+  const userName = activeUser?.fullName || activeUser?.username || "Guest";
+  const userEmail = activeUser?.email || "Not available";
+  const userInitials =
+    userName
+      .split(" ")
+      .map((n) => n?.[0] || "")
+      .join("")
+      .toUpperCase()
+      .substring(0, 2) || "??";
 
   return (
     <DropdownMenu>
@@ -60,9 +83,6 @@ export function NavUser({ user, logout }: NavUserProps) {
           </Avatar>
           <div className="grid flex-1 text-left text-sm leading-tight">
             <span className="truncate font-medium">{userName}</span>
-            <span className="truncate text-xs text-muted-foreground">
-              {userEmail}
-            </span>
           </div>
           <MoreVerticalIcon className="ml-auto size-4" />
         </Button>
@@ -86,9 +106,6 @@ export function NavUser({ user, logout }: NavUserProps) {
             </Avatar>
             <div className="grid flex-1 text-left text-sm leading-tight">
               <span className="truncate font-medium">{userName}</span>
-              <span className="truncate text-xs text-muted-foreground">
-                {userEmail}
-              </span>
             </div>
           </div>
         </DropdownMenuLabel>
