@@ -296,6 +296,8 @@ Below are screenshots showcasing the application's frontend web interface and fu
 
 ![Check Status Page](/screenshots/Screenshot%202025-05-08%20at%2019.15.06.png)
 
+![Check Status Details](/screenshots/Screenshot%202025-05-08%20at%2019.15.48.png)
+
 ![Ongoing Payments Page](/screenshots/Screenshot%202025-05-08%20at%2019.15.14.png)
 
 ![Payment Details](/screenshots/Screenshot%202025-05-08%20at%2019.15.26.png)
