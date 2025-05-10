@@ -1,9 +1,10 @@
 "use client";
 
 import React from "react";
+import { FiArrowRight, FiShield } from "react-icons/fi";
+
 import { AppLayout } from "@/components/layout/AppLayout";
 import { PaymentForm } from "@/components/payment/PaymentForm";
-import { FiArrowRight, FiShield } from "react-icons/fi";
 
 export default function PaymentInitiatePage() {
   return (

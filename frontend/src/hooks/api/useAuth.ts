@@ -2,12 +2,13 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Cookies from 'js-cookie';
+
 import { authApi } from '@/api/auth';
 import { useApiMutation } from './useApiMutations';
 import { useApiQuery } from './useApiQueries';
 import { userApi } from '@/api/user';
 import { AuthResponse, LoginRequest, UpdateProfileRequest, User, UserProfile } from '@/types';
-import Cookies from 'js-cookie';
 import { useQueryClient } from '@tanstack/react-query';
 import { QUERY_KEYS } from '@/lib/query-keys';
 

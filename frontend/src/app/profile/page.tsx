@@ -1,15 +1,16 @@
 "use client";
 
 import React, { useEffect } from "react";
+import { AxiosError } from "axios";
+import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { AppLayout } from "@/components/layout/AppLayout";
-import { Button } from "@/components/ui/button";
-import { FormInput } from "@/components/ui/form-input";
-import { useUserProfile } from "@/hooks/api";
 import { FiUser, FiMail, FiLock, FiSave, FiRefreshCw } from "react-icons/fi";
+
+import { useUserProfile } from "@/hooks/api";
+
 import {
   Card,
   CardContent,
@@ -19,8 +20,9 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { AxiosError } from "axios";
-import { toast } from "sonner";
+import { AppLayout } from "@/components/layout/AppLayout";
+import { Button } from "@/components/ui/button";
+import { FormInput } from "@/components/ui/form-input";
 
 // Form validation schema
 const profileSchema = z

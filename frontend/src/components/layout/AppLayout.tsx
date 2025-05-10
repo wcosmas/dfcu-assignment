@@ -3,10 +3,12 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { FiHome, FiCreditCard, FiSearch, FiMenu, FiList } from "react-icons/fi";
+
 import { useAuth } from "@/hooks/useAuth";
+import { cn } from "@/lib/utils";
+
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { cn } from "@/lib/utils";
 import { NavUser } from "./NavUser";
 
 interface AppLayoutProps {

@@ -2,9 +2,10 @@
 
 import React, { useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { RefreshCw } from "lucide-react";
+
 import { AppLayout } from "@/components/layout/AppLayout";
 import { StatusChecker } from "@/components/payment/StatusChecker";
-import { RefreshCw } from "lucide-react";
 
 function PaymentStatusContent() {
   const searchParams = useSearchParams();

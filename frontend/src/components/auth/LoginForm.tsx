@@ -1,14 +1,15 @@
 import React from "react";
+import { toast } from "sonner";
+import { AxiosError } from "axios";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { FiUser, FiLock } from "react-icons/fi";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { FormInput } from "../ui/form-input";
-import { Button } from "../ui/button";
+
 import { useAuth } from "@/hooks/api";
 import { LoginRequest } from "@/types";
+
 import {
   Card,
   CardHeader,
@@ -17,8 +18,8 @@ import {
   CardContent,
   CardFooter,
 } from "@/components/ui/card";
-import { toast } from "sonner";
-import { AxiosError } from "axios";
+import { FormInput } from "../ui/form-input";
+import { Button } from "../ui/button";
 
 const loginFormSchema = z.object({
   username: z.string().min(1, "Username is required"),

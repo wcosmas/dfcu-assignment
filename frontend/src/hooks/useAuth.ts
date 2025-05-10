@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Cookies from 'js-cookie';
+
+
 import { authApi } from '@/api/auth';
 import { userApi } from '@/api/user';
 import { LoginRequest, User, UpdateProfileRequest, UserProfile } from '@/types';
-import Cookies from 'js-cookie';
+
 
 export function useAuth() {
     const [user, setUser] = useState<User | null>(null);

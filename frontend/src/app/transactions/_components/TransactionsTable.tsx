@@ -6,6 +6,9 @@ import {
   FiAlertCircle,
   FiFilter,
 } from "react-icons/fi";
+
+import { PaymentStatus } from "@/types";
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -17,7 +20,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getStatusBadgeVariant, formatDate } from "./StatusBadgeVariant";
-import { PaymentStatus } from "@/types";
 
 interface TransactionsTableProps {
   filteredTransactions: PaymentStatus[];
